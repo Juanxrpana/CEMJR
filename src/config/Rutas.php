@@ -81,13 +81,13 @@ class Rutas
 
         $this->controlador = "Controller" . $this->controlador;
 
-        $directorio = "src/controllers/" . $this->controlador . ".php";
+        $directorio = __DIR__ . "/../../src/controllers/" . $this->controlador . ".php";
         if (!file_exists($directorio)) {
             header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/error");
             die("Directorio no encontrado");
         }
 
-        require_once __DIR__ . "/../../" . $directorio;
+       require_once $directorio;
 
         if (!function_exists($metodo)) {
             header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/error");
