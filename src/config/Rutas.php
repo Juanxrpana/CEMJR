@@ -20,7 +20,7 @@ class Rutas
             'lifetime' => 0,               // hasta cerrar navegador
             'path' => '/',
             'domain' => $_SERVER['HTTP_HOST'] ?? 'localhost',
-            'secure' => !$isLocal,         // true en producción (HTTPS), false en local
+            'secure' => false,         // true en producción (HTTPS), false en local
             'httponly' => true,            // no accesible desde JavaScript
             'samesite' => 'Strict'         // previene CSRF a nivel de cookie
         ]);
