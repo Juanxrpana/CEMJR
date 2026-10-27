@@ -40,7 +40,7 @@ addEventListener("DOMContentLoaded", function () {
   //funcion para llenar el array con todos los datos de la factura
   const loadDataFactura = async () => {
     const result = await executePetition(
-      `/Sistema-del--CEM--JEHOVA-RAFA/Reportes/returnDataFactura`,
+      `/Reportes/returnDataFactura`,
       "GET",
     );
     dataFactura = result;
@@ -203,7 +203,7 @@ addEventListener("DOMContentLoaded", function () {
     //darle la direccion del pdf al boton
     btnImprimirFactura.setAttribute(
       "href",
-      `/Sistema-del--CEM--JEHOVA-RAFA/Factura/mostrarPDF/${factura.id_factura}`,
+      `/Factura/mostrarPDF/${factura.id_factura}`,
     );
   };
 
@@ -211,7 +211,7 @@ addEventListener("DOMContentLoaded", function () {
   const anularFactura = async (data) => {
     try {
       const result = await executePetition(
-        `/Sistema-del--CEM--JEHOVA-RAFA/Reportes/anularFactura/${data}`,
+        `/Reportes/anularFactura/${data}`,
         "GET",
       );
 

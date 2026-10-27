@@ -17,7 +17,7 @@ addEventListener("DOMContentLoaded", function () {
 
   const valorDolar = localStorage.getItem("valorDelDolar");
 
-  const url = "/Sistema-del--CEM--JEHOVA-RAFA/Entrada";
+  const url = "/Entrada";
 
   const formAgregarEntrada = document.getElementById("formAgregarEntrada");
   const inputs = formAgregarEntrada.querySelectorAll(".input-validar");

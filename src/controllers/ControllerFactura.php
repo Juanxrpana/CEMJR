@@ -174,7 +174,7 @@ function comprobante($parametro)
 	$sanetizar = new ModeloSanetizarJSON();
 
 	if ($parametro == "") {
-		header("location: /Sistema-del--CEM--JEHOVA-RAFA/Factura/factura");
+		header("location: /Factura/factura");
 		exit;
 	}
 
@@ -182,7 +182,7 @@ function comprobante($parametro)
 		$modeloFactura->setIdFactura(unhashId($parametro[0]));
 	} catch (\Throwable $e) {
 		// Identificador manipulado o vacío: no se intenta cargar la factura.
-		header("location: /Sistema-del--CEM--JEHOVA-RAFA/Factura/factura");
+		header("location: /Factura/factura");
 		exit;
 	}
 
@@ -322,7 +322,7 @@ function registrarInsumosHospitalizacion()
 function guardarFactura()
 {
 	if (empty($_POST)) {
-		header("location: /Sistema-del--CEM--JEHOVA-RAFA/Factura/factura");
+		header("location: /Factura/factura");
 		exit;
 	}
 
@@ -415,7 +415,7 @@ function guardarFactura()
 		$modeloBitacora->setTabla("factura");
 		$modeloBitacora->insertarBitacora($idUsuario);
 
-		header("location: /Sistema-del--CEM--JEHOVA-RAFA/Factura/comprobante/" . hashId((int)$guardar['id_factura']));
+		header("location: /Factura/comprobante/" . hashId((int)$guardar['id_factura']));
 		exit;
 	}
 

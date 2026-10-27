@@ -422,7 +422,7 @@ function iniciarSesion()
     }
 }
 //         } else {
-//             header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/mostrarIniciarSesion/captcha");
+//             header("location: /IniciarSesion/mostrarIniciarSesion/captcha");
 //         }
 //     }
 // }

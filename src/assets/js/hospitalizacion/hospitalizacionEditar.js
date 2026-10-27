@@ -10,7 +10,7 @@ import {
 import { traerSerevicio } from "../../js/hospitalizacion/reutilizableHospitalizacion.js";
 import { inicializarValidacionFormulario, chulitoYX } from "../generic/expresionesModulares.js";
 
-const url = "/Sistema-del--CEM--JEHOVA-RAFA/Hospitalizacion";
+const url = "/Hospitalizacion";
 const modalAHospBoots = new bootstrap.Modal(document.getElementById("modal-agregar-hospitalizacion"));
 const modalEHospBoots = new bootstrap.Modal(document.getElementById("modal-editar-hospitalizacion"));
 
@@ -1292,7 +1292,7 @@ formEnviarFactura.addEventListener("submit", async function (e) {
         let idH = document.querySelector("#idH").value;
         await envioFSaveControl();
         formEnviarFactura.reset();
-        window.location.href = "/Sistema-del--CEM--JEHOVA-RAFA/Factura/factura/h" + idH;
+        window.location.href = "/Factura/factura/h" + idH;
     } else {
         alertError("Error", "Por favor verifique que todos los datos estén correctos.");
     }

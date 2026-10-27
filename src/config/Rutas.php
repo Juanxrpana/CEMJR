@@ -53,14 +53,14 @@ class Rutas
             $file = true;
         } else if ($this->rateLimit->evaluarLimiteDB()) {
             header("HTTP/1.1 429 Too Many Requests");
-            // header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/error");
+            // header("location: /IniciarSesion/error");
             die("Too Many Requests");
         }
 
 
         $this->partes = explode("/", $this->url);
         if (strpos($this->url, ".php") !== false) {
-            header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/error");
+            header("location: /IniciarSesion/error");
             exit;
         }
 
@@ -83,14 +83,14 @@ class Rutas
 
         $directorio = __DIR__ . "/../../src/controllers/" . $this->controlador . ".php";
         if (!file_exists($directorio)) {
-            header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/error");
+            header("location: /IniciarSesion/error");
             die("Directorio no encontrado");
         }
 
        require_once $directorio;
 
         if (!function_exists($metodo)) {
-            header("location: /Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion/error");
+            header("location: /IniciarSesion/error");
             die("Método no encontrado");
         }
 
@@ -178,7 +178,7 @@ class Rutas
 
         if (empty($_SESSION['id_rol'])) {
             session_destroy();
-            header("location: /Sistema-del--CEM--JEHOVA-RAFA/");
+            header("location: /");
             return;
         }
 
@@ -190,7 +190,7 @@ class Rutas
         $id_modulo = $this->modelo->returnIdModule();
 
         if (!$id_modulo) {
-            header("location:  /Sistema-del--CEM--JEHOVA-RAFA/Inicio/inicio/permiso");
+            header("location:  /Inicio/inicio/permiso");
             die("Módulo no encontrado");
         }
 
@@ -199,7 +199,7 @@ class Rutas
         $permitido = $this->modelo->gestionarPermisos();
 
         if (!$permitido) {
-            header("location:  /Sistema-del--CEM--JEHOVA-RAFA/Inicio/inicio/permiso");
+            header("location:  /Inicio/inicio/permiso");
             die("Permiso denegado");
         }
 

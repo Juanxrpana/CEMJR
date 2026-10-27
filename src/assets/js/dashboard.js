@@ -23,8 +23,8 @@ document.addEventListener("DOMContentLoaded", function () {
     traerCitashoy(); // Carga las citas del día
     pacientes_hospitalizados(); // Carga los pacientes hospitalizados
     traerDatosServicios(); // Carga los datos de la tabla de precios
-    especialidades_chart("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/especialidades_solicitadas"); // Genera el gráfico de especialidades
-    sintomas_chart("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/sintomas_comunes"); // Genera el gráfico de sintomas comunes
+    especialidades_chart("/Inicio/especialidades_solicitadas"); // Genera el gráfico de especialidades
+    sintomas_chart("/Inicio/sintomas_comunes"); // Genera el gráfico de sintomas comunes
     traerDoctor(); //Cargar doctores en el select
 
     //mostrar una aaler si eun poersona no tiene permiso
@@ -179,7 +179,7 @@ document.getElementById("sintomas").addEventListener("click", function () {
         return;
     }
 
-    sintomas_chart(`/Sistema-del--CEM--JEHOVA-RAFA/Inicio/sintomas_comunes_filtrados/${inputs[0].value}/${inputs[1].value}`);
+    sintomas_chart(`/Inicio/sintomas_comunes_filtrados/${inputs[0].value}/${inputs[1].value}`);
 
     setTimeout(() => {
         generarReporte(elementoImprimirSintomas, "reporte_sintomas.pdf");
@@ -221,7 +221,7 @@ document.getElementById("especialidades").addEventListener("click", function () 
     }
 
     especialidades_chart(
-        `/Sistema-del--CEM--JEHOVA-RAFA/Inicio/especialidades_solicitadas_filtradas/${inputs[0].value}/${inputs[1].value}`,
+        `/Inicio/especialidades_solicitadas_filtradas/${inputs[0].value}/${inputs[1].value}`,
     );
 
     setTimeout(() => {
@@ -318,7 +318,7 @@ function renderCalendar(year, month) {
     const daysInMonth = 32 - new Date(year, month, 32).getDate();
 
     // Realiza la petición AJAX para obtener los días con mayor carga de trabajo
-    fetch(`/Sistema-del--CEM--JEHOVA-RAFA/Inicio/diasConMasCitas`)
+    fetch(`/Inicio/diasConMasCitas`)
         .then((response) => response.json())
         .then((workDays) => {
             // workDays es un array con los días que más trabaja el doctor, por ejemplo: [{ date: "2025-04-05", citas: 10 }, { date: "2025-04-12", citas: 15 }]
@@ -411,7 +411,7 @@ function formatDate(dateObj) {
 //Cargar los doctores en el select
 const traerDoctor = async () => {
     try {
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/retornarDoctores");
+        let peticion = await fetch("/Inicio/retornarDoctores");
         let resultado = await peticion.json();
 
         if (resultado.length > 0) {
@@ -429,7 +429,7 @@ const traerDoctor = async () => {
 traerHorarioEspecificoDelDr = async (id) => {
     try {
         // Realiza la petición AJAX
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/mostrarHorario/" + id);
+        let peticion = await fetch("/Inicio/mostrarHorario/" + id);
         let resultado = await peticion.json();
 
         document.querySelector(".horario-insertar").innerHTML = "";
@@ -464,9 +464,9 @@ traerHorarioEspecificoDelDr = async (id) => {
 const traerHorarioDoctor = async (id) => {
     try {
         // Realiza la petición AJAX
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/diasConMasCitas/" + id);
+        let peticion = await fetch("/Inicio/diasConMasCitas/" + id);
         let resultado = await peticion.json();
-        console.log(resultado, "/Sistema-del--CEM--JEHOVA-RAFA/Inicio/diasConMasCitas/" + id);
+        console.log(resultado, "/Inicio/diasConMasCitas/" + id);
         //Quitar los dias marcados para marcalos nuevamente
         document.querySelectorAll(".date").forEach((date) => {
             date.classList.remove("diasOcupados");
@@ -504,7 +504,7 @@ const traerHorarioDoctor = async (id) => {
 // Carga los datos de servicios en el slider
 const traerDatosServicios = async () => {
     try {
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/servicios");
+        let peticion = await fetch("/Inicio/servicios");
         let resultado = await peticion.json();
         const track = document.getElementById("serviciosSliderTrack");
         const dotsContainer = document.getElementById("serviciosSliderDots");
@@ -643,7 +643,7 @@ const initServiciosSlider = () => {
 // Carga las citas pendientes
 const traerCitas = async () => {
     try {
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/citas");
+        let peticion = await fetch("/Inicio/citas");
         let resultado = await peticion.json();
         document.getElementById("citasPendentes").textContent = resultado.length;
     } catch (error) {
@@ -654,7 +654,7 @@ const traerCitas = async () => {
 // Carga las citas del día
 const traerCitashoy = async () => {
     try {
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/citasDeHoy");
+        let peticion = await fetch("/Inicio/citasDeHoy");
         let resultado = await peticion.json();
         document.getElementById("citasDeHoy").textContent = resultado.length;
     } catch (error) {
@@ -664,7 +664,7 @@ const traerCitashoy = async () => {
 
 const pacientes_hospitalizados = async () => {
     try {
-        let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/pacientes_hospitalizados");
+        let peticion = await fetch("/Inicio/pacientes_hospitalizados");
         let resultado = await peticion.json();
         document.getElementById("pacientes_hospitalizados").textContent = resultado.length;
         console.log(resultado);
@@ -785,7 +785,7 @@ const especialidades_chart = async (url) => {
 };
 
 async function totalDeEspecialidades(data) {
-    let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/todas_las_especialidades");
+    let peticion = await fetch("/Inicio/todas_las_especialidades");
     let resultado = await peticion.json();
     document.getElementById("texto").innerHTML = ``;
 
@@ -919,7 +919,7 @@ const sintomas_chart = async (url) => {
 };
 
 async function totalDeSintomas(data) {
-    let peticion = await fetch("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/todos_los_sintomas");
+    let peticion = await fetch("/Inicio/todos_los_sintomas");
     let resultado = await peticion.json();
     document.getElementById("textoSintomas").innerHTML = ``;
 
@@ -1100,7 +1100,7 @@ document.getElementById("reporte").addEventListener("hidden.bs.modal", () => {
         }
     });
     //   alertFechaEsp.classList.add("d-none");
-    especialidades_chart(`/Sistema-del--CEM--JEHOVA-RAFA/Inicio/especialidades_solicitadas`);
+    especialidades_chart(`/Inicio/especialidades_solicitadas`);
 });
 
 document.getElementById("reporteSintomas").addEventListener("hidden.bs.modal", () => {
@@ -1123,7 +1123,7 @@ document.getElementById("reporteSintomas").addEventListener("hidden.bs.modal", (
     });
     //   alertFechaEsp.classList.add("d-none");
 
-    sintomas_chart("/Sistema-del--CEM--JEHOVA-RAFA/Inicio/sintomas_comunes");
+    sintomas_chart("/Inicio/sintomas_comunes");
 });
 
 // Escuchar el evento que creamos en el Paso 1

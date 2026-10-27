@@ -6,7 +6,7 @@ import {
   initLoaderButton,
   finallyLoaderButton,
 } from "../generic/funtionGeneric.js";
-const url = "/Sistema-del--CEM--JEHOVA-RAFA/iniciarSesion";
+const url = "/iniciarSesion";
 const formLog = document.getElementById("loginForm");
 const btnLoginEnviar = document.getElementById("btnLoginEnviar");
 
@@ -64,7 +64,7 @@ const sendData = async (form) => {
 const closedSession = async () => {
   try {
     let result = await executePetition(
-      "/Sistema-del--CEM--JEHOVA-RAFA/Inicio/cerrarSession",
+      "/Inicio/cerrarSession",
       "GET",
     );
     console.log(result);

@@ -448,7 +448,7 @@
       // Un único <form>. Antes había tres anidados: el HTML es inválido y el
       // navegador descartaba el interno, dejando campos huérfanos.
       ?>
-      <form action="/Sistema-del--CEM--JEHOVA-RAFA/Factura/guardarFactura" method="POST" id="formConfirmarFactura" class="">
+      <form action="/Factura/guardarFactura" method="POST" id="formConfirmarFactura" class="">
 
         <table class="table table-striped" id="tablaConfirmaroperacion">
           <thead>

@@ -14,7 +14,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 
 # Redirige errores 403 a la página de error 404
-ErrorDocument 403 /Sistema-del--CEM--JEHOVA-RAFA/404.php
+ErrorDocument 403 /404.php
 
 
 # CABECERAS DE SEGURIDAD HTTP

@@ -9,7 +9,7 @@ use App\modelos\ModeloBitacora;
  */
 function chat()
 {
-	header("location: /Sistema-del--CEM--JEHOVA-RAFA/Inicio/inicio");
+	header("location: /Inicio/inicio");
 	exit;
 }
 
