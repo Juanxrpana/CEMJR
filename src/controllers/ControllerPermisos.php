@@ -6,11 +6,8 @@ use App\modelos\ModeloSanetizarJSON;
 
 function validarCsrfPermisos()
 {
-    $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $csrfToken = $headers['X-CSRF-Token']
-        ?? $headers['x-csrf-token']
-        ?? $_POST['csrf_token']
-        ?? null;
+    // $headers = function_exists('getallheaders') ? getallheaders() : [];
+    $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
     if (empty($_SESSION['csrf_token']) || empty($csrfToken) || !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
         http_response_code(403);

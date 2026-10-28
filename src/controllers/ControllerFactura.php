@@ -291,7 +291,7 @@ function registrarInsumosHospitalizacion()
 		exit;
 	}
 
-	$csrf = $_POST['csrf_token'] ?? (getallheaders()['X-CSRF-Token'] ?? null);
+	$csrf = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
 	if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
 		http_response_code(403);
 		echo json_encode(['ok' => false, 'error' => 'Token CSRF inválido']);
@@ -326,8 +326,8 @@ function guardarFactura()
 		exit;
 	}
 
-	$headers = getallheaders();
-	$csrf_token = $headers['X-CSRF-Token'] ?? $_POST['csrf_token'] ?? null;
+	// $headers = getallheaders();
+	$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 	if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
 		http_response_code(403);
