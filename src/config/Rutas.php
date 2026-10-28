@@ -14,13 +14,15 @@ class Rutas
     public function __construct($url)
     {
         //configuracion de cookies seguras
-        $isLocal = ($_SERVER['SERVER_NAME'] === 'localhost' || $_SERVER['SERVER_NAME'] === '127.0.0.1');
+        // secure = true solo si la peticion llega por HTTPS (o detras de un proxy HTTPS)
+        $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
 
         session_set_cookie_params([
             'lifetime' => 0,               // hasta cerrar navegador
             'path' => '/',
             'domain' => $_SERVER['HTTP_HOST'] ?? 'localhost',
-            'secure' => false,         // true en producción (HTTPS), false en local
+            'secure' => $https,            // true con HTTPS, false en HTTP
             'httponly' => true,            // no accesible desde JavaScript
             'samesite' => 'Strict'         // previene CSRF a nivel de cookie
         ]);
@@ -87,7 +89,7 @@ class Rutas
             die("Directorio no encontrado");
         }
 
-       require_once $directorio;
+        require_once $directorio;
 
         if (!function_exists($metodo)) {
             header("location: /IniciarSesion/error");
