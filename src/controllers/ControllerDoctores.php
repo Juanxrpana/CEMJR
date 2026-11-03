@@ -324,7 +324,7 @@ function asignarServicioDoctor()
 
     try {
 
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -418,7 +418,7 @@ function agregarDoctor()
         exit;
     }
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -486,7 +486,7 @@ function editarDoctor()
         exit;
     }
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -547,7 +547,7 @@ function borrarDoctor($datos)
         exit;
     }
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -604,7 +604,7 @@ function registrarEspecialidad()
         exit;
     }
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -655,7 +655,7 @@ function eliminarEspecialidad()
         exit;
     }
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 

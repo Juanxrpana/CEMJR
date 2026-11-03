@@ -26,7 +26,7 @@ function validarSesionYCsrf(): void
 
 	$headers = function_exists('getallheaders') ? getallheaders() : [];
 	$headers = array_change_key_case($headers, CASE_LOWER);
-	$csrf = $headers['x-csrf-token'] ?? ($_POST['csrf_token'] ?? null);
+	$csrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf_token'] ?? null);
 
 	if (empty($_SESSION['csrf_token']) || empty($csrf) || !hash_equals($_SESSION['csrf_token'], $csrf)) {
 		http_response_code(403);

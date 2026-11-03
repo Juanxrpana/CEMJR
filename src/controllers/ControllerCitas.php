@@ -249,7 +249,7 @@ function apartarCupo()
 
 
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 		if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
 			responderJson(['ok' => false, 'error' => 'Token CSRF inválido'], 403);
@@ -367,7 +367,7 @@ function guardarCita()
 	}
 
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 		if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
 			responderJson(['ok' => false, 'error' => 'Token CSRF inválido'], 403);
@@ -422,7 +422,7 @@ function eliminarCita()
 		responderJson(['ok' => false, 'error' => "Error  al realizar la peticion :("], 409);
 	}
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 		if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
 			responderJson(['ok' => false, 'error' => 'Token CSRF inválido'], 403);
@@ -548,7 +548,7 @@ function editarCita()
 	}
 
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 		if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
 			responderJson(['ok' => false, 'error' => 'Token CSRF inválido'], 403);

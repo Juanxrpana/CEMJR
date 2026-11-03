@@ -312,7 +312,7 @@ function agregarH()
         exit;
     }
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
         if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
@@ -503,7 +503,7 @@ function traerInsuDHEd($datos)
 
 function modificarH()
 {
-    // $headers = getallheaders();
+    // // $headers = getallheaders();
     $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
     if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
@@ -599,7 +599,7 @@ function eliminaL()
 
     try {
 
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
         if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {

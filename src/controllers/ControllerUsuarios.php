@@ -123,7 +123,7 @@ function addUserBlackList()
 
     try {
 
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -175,7 +175,7 @@ function removeBlackList()
     }
     try {
 
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -234,7 +234,7 @@ function editarUsuario()
 
     try {
 
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -288,7 +288,7 @@ function borrarUsuario()
 {
     try {
 
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -343,7 +343,7 @@ function registrarAdmin()
     }
 
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -414,7 +414,7 @@ function editarAdministrador()
     }
 
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -472,7 +472,7 @@ function verificarPassw()
     }
 
     try {
-        // $headers = getallheaders();
+        // // $headers = getallheaders();
         $csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 

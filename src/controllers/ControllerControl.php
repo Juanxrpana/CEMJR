@@ -259,7 +259,7 @@ function insertarControl()
 		exit;
 	}
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -353,7 +353,7 @@ function editarControl()
 		exit;
 	}
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -553,7 +553,7 @@ function eliminarSintoma($datos)
 			exit;
 		}
 
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -617,7 +617,7 @@ function agregarSintoma()
 			exit;
 		}
 
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 

@@ -118,7 +118,7 @@ function insertar()
 	}
 	try {
 
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -172,7 +172,7 @@ function insertar()
 function update()
 {
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
@@ -231,7 +231,7 @@ function editar()
 		exit;
 	}
 	try {
-		// $headers = getallheaders();
+		// // $headers = getallheaders();
 		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
 
 
