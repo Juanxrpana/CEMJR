@@ -68,7 +68,7 @@ class Rutas
 
         $this->partes = explode("/", $this->url);
         if (strpos($this->url, ".php") !== false) {
-            header("location: Sistema-del--CEM--JEHOVA-RAFA/IniciarSesion");
+            header("location: /IniciarSesion");
             exit;
         }
 
@@ -192,7 +192,7 @@ class Rutas
             // echo "linea 35";
 
             if (noigual($us["token"],$_SESSION["token_de_session"])){
-                header("location: Sistema-del--CEM--JEHOVA-RAFA/");
+                header("location: /");
             }
 
         }
