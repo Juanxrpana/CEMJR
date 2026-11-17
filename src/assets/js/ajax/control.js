@@ -12,6 +12,9 @@ import {
 } from "../generic/funtionGeneric.js";
 
 import { inicializarValidacionFormulario } from "../generic/expresionesModulares.js";
+import { inicializarBotonCedulaMenor } from "../generic/cedulaMenor.js";
+
+inicializarBotonCedulaMenor();
 
 const modalControlBoots = new bootstrap.Modal(
   document.getElementById("exampleModalAgregarControl"),
@@ -48,6 +51,83 @@ const divPatologias = document.getElementById("divPatologias");
 const divDoctores = document.getElementById("divDoctores");
 
 const modalFooter = document.getElementById("modal-footer");
+const fechaRegresoInput = modalAddControl.querySelector('[name="fechaDeCita"]');
+const ayudaDiasRegreso = document.getElementById("diasRegresoAyuda");
+let diasLaborablesUltimaCita = new Set();
+let ultimaCedulaHorario = "";
+
+const normalizarDia = (valor) =>
+  String(valor ?? "")
+    .trim()
+    .toLocaleLowerCase("es")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const actualizarAyudaDiasRegreso = () => {
+  if (!ayudaDiasRegreso) return;
+
+  if (diasLaborablesUltimaCita.size === 0) {
+    ayudaDiasRegreso.textContent =
+      "No se encontró una cita previa con horario; puede elegir cualquier día.";
+    return;
+  }
+
+  ayudaDiasRegreso.textContent = `Días que atiende el doctor de la última cita: ${[
+    ...diasLaborablesUltimaCita,
+  ].join(", ")}.`;
+};
+
+const traerHorarioUltimaCita = async (cedula) => {
+  if (cedula === ultimaCedulaHorario) return;
+  ultimaCedulaHorario = cedula;
+  diasLaborablesUltimaCita = new Set();
+  actualizarAyudaDiasRegreso();
+
+  if (!cedula) return;
+
+  try {
+    const resultado = await executePetition(
+      `/Control/horarioUltimaCitaPaciente/${encodeURIComponent(cedula)}`,
+      "GET",
+    );
+
+    if (!resultado || resultado.ok === false) return;
+
+    const utils = window.doctorScheduleUtils;
+    (resultado.dias ?? []).forEach((diasLaborables) => {
+      const dias = utils?.obtenerDiasDelHorario
+        ? utils.obtenerDiasDelHorario(diasLaborables)
+        : [];
+      dias.forEach((dia) => diasLaborablesUltimaCita.add(dia.nombre));
+    });
+
+    actualizarAyudaDiasRegreso();
+  } catch (error) {
+    console.error("No se pudo consultar el horario de la última cita:", error);
+  }
+};
+
+const validarFechaRegreso = () => {
+  if (!fechaRegresoInput?.value || diasLaborablesUltimaCita.size === 0) return;
+
+  const [anio, mes, diaNumero] = fechaRegresoInput.value.split("-").map(Number);
+  const fecha = new Date(anio, mes - 1, diaNumero);
+  if (Number.isNaN(fecha.getTime())) return;
+
+  const dia = normalizarDia(
+    fecha.toLocaleDateString("es-ES", { weekday: "long" }),
+  );
+
+  if (!diasLaborablesUltimaCita.has(dia)) {
+    alertError(
+      "Fecha de regreso",
+      `El ${dia} no está dentro del horario del doctor de la última cita.`,
+    );
+    fechaRegresoInput.value = "";
+  }
+};
+
+fechaRegresoInput?.addEventListener("change", validarFechaRegreso);
 
 const modalTitleControl = document.getElementById("modalTitleControl");
 const botonModal = document.getElementById("botonModal");
@@ -82,7 +162,7 @@ let url = "/Control";
 const traerPaciente = async () => {
   try {
     let [addClass, removeClass] = ["", ""];
-    if (cedulaControl.value.length == 7 || cedulaControl.value.length == 8) {
+    if (/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/.test(cedulaControl.value.trim())) {
       const result = await executePetition(
         `/Control/mostrarPacienteJS/${nacionalidadCita.value}/${cedulaControl.value}`,
         "GET",
@@ -123,7 +203,9 @@ const traerPaciente = async () => {
 
         // //llamar a la funcion para traer a los doctores disponibles
 
+        buscarDoctores.value = "";
         traerDoctores();
+        traerHorarioUltimaCita(cedulaControl.value.trim());
       } else {
         inputPaciente.value = "Paciente no encontrado";
         inputEdad.value = "Edad no encontrado";
@@ -133,6 +215,8 @@ const traerPaciente = async () => {
         //hacer que aparesca la caja que contine el boton para abrir el modal de agregar paciente
         divBtnAddPat.classList.remove("d-none");
         modalFooter.classList.add("d-none");
+        diasLaborablesUltimaCita = new Set();
+        actualizarAyudaDiasRegreso();
       }
     } else {
       divDataPaciente.classList.add("d-none");
@@ -800,6 +884,12 @@ cedulaControl.addEventListener("keyup", function () {
 
 btnControl.addEventListener("click", function () {
   clickButtonOpenModal();
+  // El buscador y las tarjetas de doctores no deben arrastrar el filtro de
+  // una apertura anterior.
+  buscarDoctores.value = "";
+  divDoctores.innerHTML = "";
+  modalFooter.classList.add("d-none");
+  ultimaCedulaHorario = "";
   modalControlBoots.show();
 });
 

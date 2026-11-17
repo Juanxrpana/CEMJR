@@ -226,6 +226,8 @@
 
         </div>
 
+        <p id="avisoFacturaMenor" class="alert alert-warning p-2 mt-2 d-none" role="alert"></p>
+
         <div class=" d-none" id="caja-buscar-cliente">
 
 
@@ -233,8 +235,9 @@
 
           <form style="margin-bottom: 20px;margin-top: 20px;" id="form-buscador-otro-cliente" class="d-flex justify-content-end" autocomplete="off">
             <input class="form-control input-buscar tamaño-input-buscar" type="text" name="cedula"
-              placeholder="Ingrese Cedula" required maxlength="9" minlength="7"
-              oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+              placeholder="Cédula del representante (7-8 dígitos)" required maxlength="8" minlength="7"
+              inputmode="numeric"
+              oninput="javascript: this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8);"
               id="inputBusPaCi">
 
             <button class="btn btn-buscar " title="Buscar">
@@ -506,6 +509,8 @@
              el pie queda fuera del bloque con padding para que su borde y sus
              botones sigan pegados al ancho completo. -->
         <div class="modal-body px-3 px-md-4 py-3">
+
+          <div id="datosPagoConfirmacion" class="alert alert-secondary p-2 mb-2 d-none" role="status"></div>
 
           <p class="fw-bolder mb-0 mt-2 border-bottom">SERVICIOS</p>
           <table class="table table-striped" id="tablaConfirmaroperacion">

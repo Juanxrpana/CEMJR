@@ -188,16 +188,18 @@ if (!empty($hostalizacionFacturar)) {
                         <?php foreach ($hostalizacionFacturar as $datoH): ?>
                             <input type="text" style="margin-left: -1px; padding-left: 6px;"
                                 class="ico w-25 input-buscar text-center" id="totalFactura" disabled
+                                title="Total calculado automáticamente por el sistema; no es editable."
                                 value="<?= number_format((float)$datoH["total_MoEx"], 2, ".", "") ?>">
                             <label>BS</label>
                             <input type="text" style="margin-left: -1px; padding-left: 6px;"
                                 class="ico w-25 input-buscar text-center" id="totalFacturaDolares" disabled
                                 value="<?= number_format((float)($totalDoller + $datoH["total_MoEx"]), 2, ".", "") ?>">
                             <label>$</label>
-                            <!-- El total en divisa viaja por aquí: es la base que
-                                 f.js suma al subtotal de servicios e insumos. -->
+                            <!-- Base en divisa de la hospitalización: horas + insumos.
+                                 Los servicios se agregan aparte en servicios[] y no
+                                 deben sumarse otra vez aquí. -->
                             <input type="hidden" id="inputTotalCita"
-                                value="<?= number_format((float)($totalDoller + $datoH["total_MoEx"]), 2, ".", "") ?>">
+                                value="<?= number_format((float)$datoH["total_MoEx"], 2, ".", "") ?>">
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -209,6 +211,7 @@ if (!empty($hostalizacionFacturar)) {
 
 
 <?php require_once "modalAgregarFactura.php"; ?>
+<?php require_once './src/vistas/vistaCliente/modalAgregarCliente.php'; ?>
 <?php require_once "./src/vistas/head/footer.php"; ?>
 
 <script type="module" src="<?= $urlBase ?>../src/assets/js/f.js"></script>

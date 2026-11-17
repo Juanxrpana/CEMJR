@@ -168,10 +168,13 @@ $e = static fn($v) => htmlspecialchars(htmlspecialchars_decode((string)$v, ENT_Q
                         <label>BS</label>
                         <?php foreach ($citaFacturar as $datoCita): ?>
                             <input type="number" style="margin-left: -1px; padding-left: 6px;"
-                                class=" w-25 input-buscar text-center" id="totalFactura" disabled>
+                                class=" w-25 input-buscar text-center" id="totalFactura" disabled
+                                title="Total calculado automáticamente por el sistema; no es editable.">
                             <!-- Equivalente en divisa del total (lo pinta f.js). -->
                             <span id="totalFacturaDivisa" class="fw-bolder ms-2"></span>
-                            <input type="hidden" id="inputTotalCita" value="<?= $e($datoCita['precio']) ?>">
+                            <!-- El servicio de la cita ya se agrega a la tabla y
+                                 viaja en servicios[]; no debe sumarse otra vez como base. -->
+                            <input type="hidden" id="inputTotalCita" value="0">
                         <?php endforeach; ?>
 
 
@@ -189,6 +192,7 @@ $e = static fn($v) => htmlspecialchars(htmlspecialchars_decode((string)$v, ENT_Q
 </div>
 
 <?php require_once 'modalAgregarFactura.php'; ?>
+<?php require_once './src/vistas/vistaCliente/modalAgregarCliente.php'; ?>
 
 <?php require_once './src/vistas/head/footer.php'; ?>
 

@@ -16,6 +16,9 @@ import {
   chulitoYX,
 } from "../generic/expresionesModulares.js";
 import { initConversion } from "../generic/coversion.js";
+import { inicializarBotonCedulaMenor } from "../generic/cedulaMenor.js";
+
+inicializarBotonCedulaMenor();
 
 const modalHospitGuardar = new bootstrap.Modal(
   document.getElementById("modal-agregar-hospitalizacion"),

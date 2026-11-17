@@ -53,8 +53,10 @@ const expresiones = {
             "La contraseña debe tener entre 8 y 12 caracteres, incluir al menos una mayúscula, un número y un carácter especial.",
     },
     cedula: {
-        expresion: /^([1-9]{1})([0-9]{6,7})$/,
-        mensajeError: "La cédula debe contener únicamente números y estar entre 7 a 8 caracteres",
+        // Los menores de edad usan la cédula del representante con sufijo -R1.
+        expresion: /^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/,
+        mensajeError:
+            "La cédula debe tener entre 7 y 8 dígitos. Para menores de edad use la cédula del representante con sufijo -R (ej: 12345678-R1).",
     },
     telefono: {
         expresion: /^(0?)(412|414|416|424|426|422|212|24[1-9]|25[1-9])\d{7}$/,
@@ -134,30 +136,33 @@ const expresiones = {
         mensajeError: "El doctor esta mal seleccionado",
     },
     indicaciones: {
-        // Permite Mayúscula inicial y luego cualquier combinación de letras (mayus/minus), números y espacios
-        expresion: /^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s]{7,}$/,
-        mensajeError: "Debe iniciar con mayúscula y tener al menos 8 caracteres (letras o números).",
+        // Mayúscula inicial, letras, números, espacios y puntuación básica.
+        expresion: /^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s,.;:()\/%°#\-¿?¡!"'\n\r]{7,}$/,
+        mensajeError:
+            "Debe iniciar con mayúscula y tener al menos 8 caracteres (se permiten signos de puntuación básicos).",
     },
     diagnostico: {
-        // Permite mayúscula inicial, letras, números, acentos, signos de puntuación y saltos de línea (\n)
-        expresion: /^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s,.\n\r]{7,}$/,
+        expresion: /^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s,.;:()\/%°#\-¿?¡!"'\n\r]{7,}$/,
         mensajeError:
-            "El diagnóstico debe iniciar con mayúscula y tener al menos 8 caracteres (puedes incluir puntos, comas y saltos de línea).",
+            "El diagnóstico debe iniciar con mayúscula y tener al menos 8 caracteres (se permiten signos de puntuación básicos).",
     },
 
     historial: {
-        expresion: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ0-9\s]{8,}$/,
-        mensajeError: "Debe iniciar con mayúscula y tener al menos 8 caracteres.",
+        expresion: /^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s,.;:()\/%°#\-]{8,}$/,
+        mensajeError:
+            "El historial debe tener al menos 8 caracteres (se permiten signos de puntuación básicos).",
     },
 
     historialE: {
-        expresion: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ0-9\s]{8,}$/,
-        mensajeError: "Debe iniciar con mayúscula y tener al menos 8 caracteres.",
+        expresion: /^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s,.;:()\/%°#\-]{8,}$/,
+        mensajeError:
+            "El historial debe tener al menos 8 caracteres (se permiten signos de puntuación básicos).",
     },
 
     historialEnF: {
-        expresion: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ0-9\s]{8,}$/,
-        mensajeError: "Debe iniciar con mayúscula y tener al menos 8 caracteres.",
+        expresion: /^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s,.;:()\/%°#\-]{8,}$/,
+        mensajeError:
+            "El historial debe tener al menos 8 caracteres (se permiten signos de puntuación básicos).",
     },
 
     imagen: {

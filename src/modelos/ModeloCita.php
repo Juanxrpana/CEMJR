@@ -918,7 +918,7 @@ class ModeloCita extends ModelBase
 
 	public function setCedula($cedula)
 	{
-		if (!preg_match("/^([1-9]{1})([0-9]{6,7})$/", $cedula)) {
+		if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
 			throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos.");
 		}
 		$this->cedula = $cedula;

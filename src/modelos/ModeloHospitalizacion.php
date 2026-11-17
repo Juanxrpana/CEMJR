@@ -1321,7 +1321,7 @@ class ModeloHospitalizacion extends ModelBase
 
     public function setDiagnostico($diagnostico)
     {
-        if (!preg_match("/^([A-Za-z0-9\s\.,#-]{8,})$/", $diagnostico)) {
+        if (!preg_match("~^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,;:()/%°#\-¿?¡!\"'\n\r]{8,}$~u", (string)$diagnostico)) {
             throw new \InvalidArgumentException("el diagnostico debe estar completa y detallada.");
         }
 
@@ -1331,7 +1331,7 @@ class ModeloHospitalizacion extends ModelBase
 
     public function setHistorial($historial)
     {
-        if (!preg_match("/^([A-Za-z0-9\s\.,#-]{8,})$/", $historial)) {
+        if (!preg_match("~^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,;:()/%°#\-¿?¡!\"'\n\r]{8,}$~u", (string)$historial)) {
             throw new \InvalidArgumentException("El historial debe estar completa y detallada.");
         }
 
@@ -1341,7 +1341,7 @@ class ModeloHospitalizacion extends ModelBase
     public function setIndicaciones($indicaciones)
     {
 
-        if (!preg_match("/^([A-Za-z0-9\s\.,#-]{8,})$/", $indicaciones)) {
+        if (!preg_match("~^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,;:()/%°#\-¿?¡!\"'\n\r]{8,}$~u", (string)$indicaciones)) {
             throw new \InvalidArgumentException("lasindicaciones debe estar completa y detallada.");
         }
         $this->indicaciones  = $indicaciones;
@@ -1349,7 +1349,7 @@ class ModeloHospitalizacion extends ModelBase
 
     public function setCedula($cedula)
     {
-        if (!preg_match("/^([1-9]{1})([0-9]{6,7})$/", $cedula)) {
+        if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
             throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos.");
         }
         $this->cedula = $cedula;

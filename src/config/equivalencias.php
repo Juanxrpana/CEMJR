@@ -27,6 +27,7 @@ return [
     "restablecer" => "eliminar",
     "getHistorialSalud" => "consultar",
     "getHistorialSaludAjax" => "consultar",
+    "generarCedulaMenor" => "consultar",
 
 
     //Clientes
@@ -205,6 +206,7 @@ return [
     "returnSistomasPaciente" => "consultar",
     "returnPatologiasPaciente" => "consultar",
     "returnDoctores" => "consultar",
+    "horarioUltimaCitaPaciente" => "consultar",
 
     //Insumos
     "insumos" => "consultar",

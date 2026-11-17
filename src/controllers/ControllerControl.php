@@ -98,6 +98,25 @@ function returnDoctores()
 	echo json_encode($data);
 }
 
+// Devuelve los días laborables del doctor de la última cita del paciente.
+function horarioUltimaCitaPaciente($datos)
+{
+	try {
+		$cedula = $datos[0] ?? '';
+		if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
+			http_response_code(409);
+			echo json_encode(['ok' => false, 'error' => 'Cédula inválida.']);
+			exit;
+		}
+
+		$modeloControl = new ModeloControl();
+		echo json_encode($modeloControl->horarioUltimaCitaPaciente($cedula));
+	} catch (\Throwable $e) {
+		http_response_code(409);
+		echo json_encode(['ok' => false, 'error' => 'No se pudo consultar el horario del doctor.']);
+	}
+}
+
 function listPacientesJS()
 {
 	if (empty($_GET)) {

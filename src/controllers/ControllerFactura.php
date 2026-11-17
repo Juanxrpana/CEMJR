@@ -254,6 +254,7 @@ function datosHospitalizacion($parametro)
 			'total' => $hospit['total'],
 			'id_paciente' => $hospit['id_paciente'],
 			'nacionalidad' => $hospit['nacionalidad'],
+			'cedula' => $hospit['cedula'],
 			'nombre_p' => $hospit['nombre'],
 			'apellido_p' => $hospit['apellido'],
 			'nombredoc' => $hospit['nombredoc'],
@@ -482,7 +483,12 @@ function guardarFactura()
 		facturaResponderError(409, $e->getMessage());
 	}
 
-	$guardar = $modeloFactura->guardarFactura($idUsuario);
+	try {
+		$guardar = $modeloFactura->guardarFactura($idUsuario);
+	} catch (\Throwable $e) {
+		facturaLiberarIdempotencia();
+		facturaResponderError(409, $e->getMessage());
+	}
 
 	// El modelo devuelve SIEMPRE ['exito' => bool, ...]. Antes devolvía un string
 	// con el mensaje de error, que al ser truthy se tomaba como éxito: se

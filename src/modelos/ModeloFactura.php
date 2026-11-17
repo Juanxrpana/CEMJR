@@ -880,12 +880,77 @@ class ModeloFactura extends ModelBase
 
 	// ── PÚBLICO──────────────────────────────────────
 
+	/**
+	 * Edad en años cumplidos a partir de una fecha YYYY-MM-DD.
+	 * Devuelve -1 si la fecha no es válida.
+	 */
+	private function edadDesdeFecha($fecha): int
+	{
+		$fecha = trim((string)$fecha);
+		$nacimiento = \DateTime::createFromFormat('Y-m-d', $fecha);
+		if (!$nacimiento || $nacimiento->format('Y-m-d') !== $fecha) {
+			return -1;
+		}
+
+		$hoy = new \DateTime('today');
+		return (int)$nacimiento->diff($hoy)->y;
+	}
+
+	/**
+	 * Un menor de edad no puede ser el cliente/responsable de la factura.
+	 * Se exige un cliente adulto y distinto del paciente (representante).
+	 */
+	private function validarFacturaMenorEdad(): void
+	{
+		if (!$this->getIdPaciente() || !$this->getIdCliente()) {
+			return;
+		}
+
+		$this->setSQL(
+			"SELECT p.fn AS paciente_fn, p.cedula AS paciente_cedula,
+			        c.fn AS cliente_fn, c.cedula AS cliente_cedula
+			 FROM paciente p
+			 INNER JOIN cliente c ON c.id_cliente = :id_cliente
+			 WHERE p.id_paciente = :id_paciente"
+		);
+		$datos = $this->search([
+			'id_cliente' => $this->getIdCliente(),
+			'id_paciente' => $this->getIdPaciente(),
+		], false);
+
+		if (empty($datos)) {
+			throw new \DomainException("No se pudo validar el paciente y el cliente de la factura.");
+		}
+
+		$edadCliente = $this->edadDesdeFecha($datos['cliente_fn'] ?? '');
+		if ($edadCliente >= 0 && $edadCliente < 18) {
+			throw new \DomainException("El cliente que paga debe ser un adulto. Seleccione o registre a un representante adulto.");
+		}
+
+		$edadPaciente = $this->edadDesdeFecha($datos['paciente_fn'] ?? '');
+		if ($edadPaciente < 0 || $edadPaciente >= 18) {
+			return;
+		}
+
+		$cedulaPaciente = trim((string)($datos['paciente_cedula'] ?? ''));
+		$cedulaCliente = trim((string)($datos['cliente_cedula'] ?? ''));
+		if ($cedulaCliente !== '' && $cedulaCliente === $cedulaPaciente) {
+			throw new \DomainException("El paciente es menor de edad; la factura debe emitirse a nombre de un representante adulto, no del paciente.");
+		}
+	}
+
 	public function guardarCliente($idUsuario = null)
 	{
 		try {
 			$data = ['id_paciente' => $this->getIdPaciente()];
 			$this->setSQL("SELECT * FROM paciente WHERE id_paciente = :id_paciente");
 			$dataPaciente = $this->search($data, false);
+
+			// Un menor no puede convertirse en cliente/responsable de la factura.
+			$edadPaciente = $this->edadDesdeFecha($dataPaciente['fn'] ?? '');
+			if ($edadPaciente >= 0 && $edadPaciente < 18) {
+				throw new \DomainException("El paciente es menor de edad; seleccione o registre al representante como cliente antes de facturar.");
+			}
 
 			$modeloCliente = new ModeloCliente();
 			$modeloCliente->setNacionalidad($dataPaciente['nacionalidad']);
@@ -917,6 +982,9 @@ class ModeloFactura extends ModelBase
 		if (empty($this->servicios) && empty($this->insumos) && empty($this->idH)) {
 			throw new \DomainException("No se puede registrar una factura sin servicios ni insumos.");
 		}
+
+		// Regla de negocio: un menor no puede ser el responsable de la factura.
+		$this->validarFacturaMenorEdad();
 
 		return $this->insertar();
 	}
@@ -1184,7 +1252,7 @@ class ModeloFactura extends ModelBase
 
 	public function setCedula($cedula)
 	{
-		if (!is_scalar($cedula) || !preg_match("/^([1-9]{1})([0-9]{6,7})$/", (string)$cedula)) {
+		if (!is_scalar($cedula) || !preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
 			throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos.");
 		}
 		$this->cedula = (string)$cedula;

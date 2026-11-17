@@ -32,7 +32,10 @@
                     <option value="E">E</option>
                   </select>
 
-                  <input class="form-control txt-custom input-validar inputs" id="cedulaPaciente" name="cedula" type="number" placeholder="Cédula del paciente">
+                  <input class="form-control txt-custom input-validar inputs" id="cedulaPaciente" name="cedula" type="text"
+                    inputmode="numeric" maxlength="13" autocomplete="off"
+                    placeholder="Cédula del paciente"
+                    oninput="this.value = this.value.toUpperCase().replace(/[^0-9R-]/g, '')">
 
                   <span class="icono-der">
                     <svg class="check d-none" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
@@ -43,6 +46,10 @@
                     </svg>
                   </span>
                 </div>
+
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="btnCedulaMenor">
+                  Generar cédula de menor (representante)
+                </button>
 
                 <p class="error-msg d-none"></p>
               </div>

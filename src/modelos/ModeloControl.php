@@ -62,6 +62,152 @@ class ModeloControl extends ModelBase
 		return $control['id_control'] ?? null;
 	}
 
+	/**
+	 * Días laborables del doctor de la última cita del paciente.
+	 * Se usa para limitar la fecha de regreso en el control médico.
+	 */
+	public function horarioUltimaCitaPaciente($cedula)
+	{
+		$this->setSQL(
+			"SELECT c.doctor AS id_personal
+			 FROM cita c
+			 INNER JOIN paciente p ON p.id_paciente = c.paciente_id_paciente
+			 WHERE p.cedula = :cedula
+			 ORDER BY c.fecha DESC, c.id_cita DESC
+			 LIMIT 1"
+		);
+		$cita = $this->search(['cedula' => $cedula], false);
+
+		if (empty($cita['id_personal'])) {
+			return ['id_personal' => null, 'dias' => []];
+		}
+
+		return [
+			'id_personal' => (int)$cita['id_personal'],
+			'dias' => $this->diasHorarioDoctor((int)$cita['id_personal']),
+		];
+	}
+
+	private function diasHorarioDoctor($idPersonal)
+	{
+		$this->setSQL(
+			"SELECT h.diaslaborables
+			 FROM horarioydoctor hd
+			 INNER JOIN horario h ON h.id_horario = hd.id_horario
+			 WHERE hd.id_personal = :id_personal
+			 AND NOT EXISTS (
+				 SELECT 1
+				 FROM horarioydoctor hyd_reciente
+				 WHERE hyd_reciente.id_personal = hd.id_personal
+				 AND hyd_reciente.id_horario = hd.id_horario
+				 AND hyd_reciente.id_horarioydoctor > hd.id_horarioydoctor
+			 )
+			 ORDER BY hd.id_horarioydoctor DESC"
+		);
+		$horarios = $this->search(['id_personal' => $idPersonal]);
+		if (!is_array($horarios)) {
+			return [];
+		}
+
+		return array_values(array_unique(array_column($horarios, 'diaslaborables')));
+	}
+
+	private function nombreDiaEspanol($fecha)
+	{
+		$diasEsp = [
+			1 => 'lunes',
+			2 => 'martes',
+			3 => 'miércoles',
+			4 => 'jueves',
+			5 => 'viernes',
+			6 => 'sábado',
+			7 => 'domingo',
+		];
+
+		$date = \DateTime::createFromFormat('Y-m-d', (string)$fecha);
+		if (!$date) {
+			return '';
+		}
+
+		return $diasEsp[(int)$date->format('N')] ?? '';
+	}
+
+	private function horarioIncluyeDia($diasLaborables, $dia)
+	{
+		$diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+		$normalizar = static function ($valor) {
+			$valor = strtolower(trim((string)$valor));
+			return strtr($valor, [
+				'á' => 'a',
+				'é' => 'e',
+				'í' => 'i',
+				'ó' => 'o',
+				'ú' => 'u',
+				'ü' => 'u',
+			]);
+		};
+
+		$partes = preg_split('/\s+a\s+/u', $normalizar($diasLaborables), 2);
+		$inicio = array_search($partes[0] ?? '', $diasSemana, true);
+		$fin = count($partes) === 2
+			? array_search($partes[1], $diasSemana, true)
+			: $inicio;
+		$diaNormalizado = $normalizar($dia);
+
+		if ($inicio === false || $fin === false || !in_array($diaNormalizado, $diasSemana, true)) {
+			return false;
+		}
+
+		for ($indice = $inicio, $recorridos = 0; $recorridos < count($diasSemana); $recorridos++) {
+			if ($diasSemana[$indice] === $diaNormalizado) {
+				return true;
+			}
+			if ($indice === $fin) {
+				return false;
+			}
+			$indice = ($indice + 1) % count($diasSemana);
+		}
+
+		return false;
+	}
+
+	/**
+	 * Valida que la fecha de regreso caiga en un día laborable del doctor
+	 * de la última cita guardada del paciente.
+	 */
+	public function validarFechaRegresoDoctor($idPaciente, $fecha)
+	{
+		if (empty($idPaciente) || empty($fecha)) {
+			return;
+		}
+
+		$this->setSQL(
+			"SELECT c.doctor AS id_personal
+			 FROM cita c
+			 WHERE c.paciente_id_paciente = :id_paciente
+			 ORDER BY c.fecha DESC, c.id_cita DESC
+			 LIMIT 1"
+		);
+		$cita = $this->search(['id_paciente' => $idPaciente], false);
+		if (empty($cita['id_personal'])) {
+			return;
+		}
+
+		$dias = $this->diasHorarioDoctor((int)$cita['id_personal']);
+		if (empty($dias)) {
+			return;
+		}
+
+		$dia = $this->nombreDiaEspanol($fecha);
+		foreach ($dias as $diasLaborables) {
+			if ($this->horarioIncluyeDia($diasLaborables, $dia)) {
+				return;
+			}
+		}
+
+		throw new \InvalidArgumentException("La fecha de regreso debe ser un día que atienda el doctor de la última cita.");
+	}
+
 	public function mostrarSintomasPaId()
 	{
 		$data = ['idControl' => $this->getIdControl()];
@@ -230,6 +376,9 @@ class ModeloControl extends ModelBase
 			$this->fechaRegreso,
 			$this->severidad
 		], ' al registrar un control');
+
+		$this->validarFechaRegresoDoctor($this->id_paciente, $this->fechaRegreso);
+
 		return $this->insertarControlDB();
 	}
 
@@ -244,6 +393,14 @@ class ModeloControl extends ModelBase
 			$this->fechaRegreso,
 			$this->severidad
 		], ' al editar un control');
+
+		// La edición no recibe id_paciente; se obtiene desde el control.
+		$this->setSQL("SELECT id_paciente FROM control WHERE id_control = :id_control");
+		$control = $this->search(['id_control' => $this->id_control], false);
+		if (!empty($control['id_paciente'])) {
+			$this->validarFechaRegresoDoctor((int)$control['id_paciente'], $this->fechaRegreso);
+		}
+
 		return $this->editarControlDB();
 	}
 
@@ -314,16 +471,18 @@ class ModeloControl extends ModelBase
 
 	public function setHistorial($historial)
 	{
-		if (!preg_match("/^([A-Za-z0-9\s\.,#-]{8,})$/", $historial)) {
-			throw new \InvalidArgumentException("El historial debe estar completo y detallado.");
+		// Se permiten signos de puntuación básicos para que el médico pueda
+		// redactar el historial con comas, puntos, paréntesis, etc.
+		if (!preg_match("~^[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s.,;:()/%°#\-]{8,}$~u", (string)$historial)) {
+			throw new \InvalidArgumentException("El historial debe estar completo y detallado (mínimo 8 caracteres; se permiten signos de puntuación básicos).");
 		}
 		$this->historial = $historial;
 	}
 
 	public function setDiagnostico($diagnostico)
 	{
-		if (!preg_match("/^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s,.\n\r]{7,}$/", $diagnostico)) {
-			throw new \InvalidArgumentException("El diagnóstico debe iniciar con mayúscula y tener al menos 8 caracteres.");
+		if (!preg_match("~^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s,.;:()/%°#\-¿?¡!\"'\n\r]{7,}$~u", (string)$diagnostico)) {
+			throw new \InvalidArgumentException("El diagnóstico debe iniciar con mayúscula y tener al menos 8 caracteres (se permiten signos de puntuación básicos).");
 		}
 		$this->diagnostico = $diagnostico;
 	}
@@ -346,8 +505,8 @@ class ModeloControl extends ModelBase
 
 	public function setIndicaciones($indicaciones)
 	{
-		if (!preg_match("/^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s]{7,}$/", $indicaciones)) {
-			throw new \InvalidArgumentException("Debe iniciar con mayúscula y tener al menos 8 caracteres.");
+		if (!preg_match("~^[A-ZÁÉÍÓÚÑ][A-Za-záéíóúñ0-9\s,.;:()/%°#\-¿?¡!\"'\n\r]{7,}$~u", (string)$indicaciones)) {
+			throw new \InvalidArgumentException("Las indicaciones deben iniciar con mayúscula y tener al menos 8 caracteres (se permiten signos de puntuación básicos).");
 		}
 		$this->indicaciones = $indicaciones;
 	}
@@ -413,7 +572,7 @@ class ModeloControl extends ModelBase
 
 	public function setCedula($cedula)
 	{
-		if (!preg_match("/^([1-9]{1})([0-9]{6,7})$/", $cedula)) {
+		if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
 			throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos.");
 		}
 		$this->cedula = $cedula;

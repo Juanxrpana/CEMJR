@@ -53,7 +53,10 @@
                                     </select>
 
                                     <!-- Input cédula — búsqueda automática (debounce 500 ms) -->
-                                    <input class="form-control txt-custom input-validar inputs w-100" type="number" name="cedula" id="bt" placeholder="Cédula del paciente" maxlength="8" minlength="6">
+                                    <input class="form-control txt-custom input-validar inputs w-100" type="text"
+                                        name="cedula" id="bt" placeholder="Cédula del paciente (7-8 dígitos)"
+                                        maxlength="13" minlength="6" inputmode="numeric" autocomplete="off"
+                                        oninput="this.value = this.value.toUpperCase().replace(/[^0-9R-]/g, '')">
 
                                     <span class="icono-der">
                                         <svg class="check d-none" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">

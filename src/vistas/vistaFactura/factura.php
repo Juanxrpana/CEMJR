@@ -75,9 +75,10 @@ $idHospitalizacion = isset($_GET['idH']) ? preg_replace('/[^0-9]/', '', (string)
                     <!-- El submit se cancela en f.js: buscar nunca recarga la página. -->
                     <form id="form-buscador-factura" class="d-flex justify-content-end" autocomplete="off" novalidate>
                         <input class="form-control input-buscar tamaño-input-buscar" type="text" name="cedula"
-                            placeholder="Ingrese Cedula" id="input-cedula-paciente" required maxlength="9" minlength="7"
-                            inputmode="numeric" pattern="[0-9]{7,8}"
-                            oninput="javascript: this.value = this.value.replace(/[^0-9]/g, '');">
+                            placeholder="Cédula del paciente (7-8 dígitos)" id="input-cedula-paciente" required
+                            maxlength="13" minlength="7" inputmode="numeric"
+                            pattern="[0-9]{7,8}(-R[0-9]{1,2})?"
+                            oninput="javascript: this.value = this.value.toUpperCase().replace(/[^0-9R-]/g, '');">
 
                         <button type="submit" class="btn btn-buscar " title="Buscar">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
@@ -156,7 +157,8 @@ $idHospitalizacion = isset($_GET['idH']) ? preg_replace('/[^0-9]/', '', (string)
                         <label class="fw-bolder mb-0">TOTAL: </label>
                         <label class="mb-0">BS</label>
                         <input type="text" style="margin-left: -1px; padding-left: 6px;"
-                            class=" w-25 input-buscar text-center" id="totalFactura" disabled>
+                            class=" w-25 input-buscar text-center" id="totalFactura" disabled
+                            title="Total calculado automáticamente por el sistema; no es editable.">
                         <!-- Equivalente en divisa del total: el cajero ve ambos
                              importes sin tener que hacer la conversión mental. -->
                         <span id="totalFacturaDivisa" class="fw-bolder ms-2"></span>
@@ -171,10 +173,10 @@ $idHospitalizacion = isset($_GET['idH']) ? preg_replace('/[^0-9]/', '', (string)
 </div>
 
 <?php require_once 'modalAgregarFactura.php'; ?>
-
-<?php require_once './src/vistas/head/footer.php'; ?>
 <?php require_once './src/vistas/vistaPacientes/modalAgregarPaciente.php'; ?>
 <?php require_once './src/vistas/vistaCliente/modalAgregarCliente.php'; ?>
+
+<?php require_once './src/vistas/head/footer.php'; ?>
 
 
 <script type="text/javascript" src="<?= $urlBase ?>../src/assets/library/list.min.js"></script>

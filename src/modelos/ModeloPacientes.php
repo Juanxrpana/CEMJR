@@ -244,6 +244,30 @@ class ModeloPacientes extends ModelBase
 	}
 
 
+	/**
+	 * Genera una cédula de referencia para un menor a partir de la cédula del
+	 * representante: 12345678-R1, 12345678-R2, etc. La parte numérica permite
+	 * localizar al representante en la tabla cliente al facturar.
+	 */
+	public function generarCedulaMenor($cedulaRepresentante)
+	{
+		$cedulaRepresentante = trim((string)$cedulaRepresentante);
+		if (!preg_match("/^[1-9][0-9]{6,7}$/", $cedulaRepresentante)) {
+			throw new \InvalidArgumentException("La cédula del representante debe tener entre 7 y 8 dígitos.");
+		}
+
+		for ($i = 1; $i <= 99; $i++) {
+			$candidata = $cedulaRepresentante . '-R' . $i;
+			$this->setSQL("SELECT cedula FROM paciente WHERE cedula = :cedula");
+			$existe = $this->search(['cedula' => $candidata], false);
+			if (empty($existe)) {
+				return $candidata;
+			}
+		}
+
+		throw new \InvalidArgumentException("No se pudo generar una cédula única para el menor. Verifique las cédulas existentes.");
+	}
+
 	private function validarCedula($data, $returnCedula = false)
 	{
 		try {
@@ -390,16 +414,18 @@ class ModeloPacientes extends ModelBase
 
 	public function setCedula($cedula)
 	{
-		if (!preg_match("/^([1-9]{1})([0-9]{6,7})$/", $cedula)) {
-			throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos.");
+		// Los menores de edad usan la cédula del representante con el sufijo -R
+		// (por ejemplo 12345678-R1) para no duplicar la cédula del adulto.
+		if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
+			throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos, con un sufijo -R para menores de edad.");
 		}
 		$this->cedula = $cedula;
 	}
 
 	public function setCedulaRegistrada($cedula)
 	{
-		if (!preg_match("/^([1-9]{1})([0-9]{6,7})$/", $cedula)) {
-			throw new \InvalidArgumentException("La cédula registrada debe contener entre 7 y 8 dígitos.");
+		if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedula)) {
+			throw new \InvalidArgumentException("La cédula registrada debe contener entre 7 y 8 dígitos, con un sufijo -R para menores de edad.");
 		}
 		$this->cedulaRegistrada = $cedula;
 	}

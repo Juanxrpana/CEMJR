@@ -7,6 +7,7 @@ import {
 import Paginator from "./generic/Paginator.js";
 import { inicializarValidacionFormulario } from "./generic/expresionesModulares.js";
 import { valorDolar, guardarTasaManual, tasaGuardada } from "./generic/coversion.js";
+import { inicializarBotonCedulaMenor } from "./generic/cedulaMenor.js";
 import {
   formatUSD,
   formatBS,
@@ -14,6 +15,8 @@ import {
   valorEditable,
   montoDualHTML,
 } from "./generic/moneda.js";
+
+inicializarBotonCedulaMenor();
 
 /** Obtiene un elemento por id devolviendo null en vez de lanzar. */
 const byId = (id) => document.getElementById(id);
@@ -209,6 +212,13 @@ addEventListener("DOMContentLoaded", async function () {
   // la pantalla y el modal nunca mostraría el nombre.
   const dataClienteModal = byId("data-cliente-modal");
   const divClienteNoEncontrado = byId("div-cliente-no-encontrado");
+  const avisoFacturaMenor = byId("avisoFacturaMenor");
+  const datosPagoConfirmacion = byId("datosPagoConfirmacion");
+
+  // Estado de la regla de facturación: un menor no puede ser el responsable.
+  let esMenorPaciente = false;
+  let clienteSeleccionado = false;
+  let clienteEsAdulto = false;
 
   //botones de acciones en la factura
   const btnAddPac = byId("btnAddPac");
@@ -303,6 +313,92 @@ addEventListener("DOMContentLoaded", async function () {
     return Math.max(0, edad);
   };
 
+  /**
+   * Cédula base del representante. La cédula de un menor se guarda como
+   * "12345678-R1"; la parte numérica es la cédula del representante.
+   */
+  const cedulaBaseRepresentante = (cedula) =>
+    String(cedula ?? "").replace(/-R\d+$/i, "");
+
+  const mostrarAvisoMenor = (texto = "") => {
+    if (!avisoFacturaMenor) return;
+    avisoFacturaMenor.innerText = texto;
+    avisoFacturaMenor.classList.toggle("d-none", !texto);
+  };
+
+  const mostrarPayerConfirmacion = (texto = "") => {
+    if (!datosPagoConfirmacion) return;
+    datosPagoConfirmacion.innerText = texto;
+    datosPagoConfirmacion.classList.toggle("d-none", !texto);
+  };
+
+  /**
+   * Decide si se puede avanzar al pago:
+   * - adulto: puede facturarse a su nombre o a un cliente adulto;
+   * - menor: obligatoriamente a nombre de un cliente adulto (representante).
+   */
+  const actualizarBotonCliente = () => {
+    const switchOn = Boolean(pacienteClienteCheck?.checked);
+    const clienteValido = clienteSeleccionado && clienteEsAdulto;
+    const puedeContinuar = esMenorPaciente
+      ? switchOn && clienteValido
+      : !switchOn || clienteValido;
+
+    botonPC?.classList.toggle("d-none", !puedeContinuar);
+
+    if (esMenorPaciente && !clienteValido) {
+      mostrarAvisoMenor(
+        "Paciente menor de edad: la factura debe emitirse a nombre de un representante adulto. Busque o registre al representante como cliente.",
+      );
+    } else if (esMenorPaciente) {
+      mostrarAvisoMenor(
+        "Paciente menor de edad: la factura se emitirá a nombre del representante seleccionado.",
+      );
+    } else {
+      mostrarAvisoMenor("");
+    }
+  };
+
+  /** Aplica la regla de edad al paciente recién cargado. */
+  const aplicarReglaPaciente = (edad) => {
+    esMenorPaciente = Number(edad) > 0 && Number(edad) < 18;
+    clienteSeleccionado = false;
+    clienteEsAdulto = false;
+    if (inputCliente) inputCliente.value = "";
+    mostrarPayerConfirmacion("");
+
+    if (pacienteClienteCheck) {
+      pacienteClienteCheck.checked = esMenorPaciente;
+      cajaBuscadorCliente?.classList.toggle("d-none", !esMenorPaciente);
+    }
+
+    if (!esMenorPaciente) {
+      if (dataClienteModal) dataClienteModal.innerText = "";
+    }
+
+    actualizarBotonCliente();
+  };
+
+  /**
+   * Prefija la búsqueda del representante con la cédula base del menor.
+   * Solo aplica cuando la cédula del menor tiene el sufijo -R; si no, no se
+   * conoce la cédula del representante y el usuario debe escribirla.
+   */
+  const precargarCedulaRepresentante = (cedulaPaciente) => {
+    if (!esMenorPaciente) return false;
+    const cedula = String(cedulaPaciente ?? "");
+    if (!/-R[0-9]{1,2}$/i.test(cedula)) return false;
+
+    const base = cedulaBaseRepresentante(cedula);
+    const input = formBuscadorOtroCliente?.querySelector('[name="cedula"]');
+    if (input && base) {
+      input.value = base;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      return true;
+    }
+    return false;
+  };
+
   const buscarCliente = async (formulario) => {
     try {
       const datos = new FormData(formulario);
@@ -321,26 +417,48 @@ addEventListener("DOMContentLoaded", async function () {
       if (resultado.length > 0) {
         const res = resultado[0];
         const edad = calcularEdad(res.fn);
+        const clienteAdulto = edad >= 18;
+        const cedula = [res.nacionalidad, res.cedula].filter(Boolean).join("-");
+        const datosCliente =
+          `CLIENTE: ${res.nombre} ${res.apellido} | C.I: ${cedula} | ` +
+          `Tel: ${res.telefono ?? ""} | ${res.direccion ?? ""} | Edad: ${edad}`;
 
         // Se muestra dentro del modal de "otra persona", no en la pantalla principal.
         if (dataClienteModal) {
-          dataClienteModal.innerText = `CLIENTE: ${res.nombre} ${res.apellido} Edad: ${edad}`;
+          dataClienteModal.innerText = clienteAdulto
+            ? datosCliente
+            : "El cliente seleccionado es menor de edad. La factura debe emitirse a nombre de un adulto.";
         }
-        if (inputCliente) inputCliente.value = res.id_cliente;
 
-        divClienteNoEncontrado?.classList.add("d-none");
-        btnAddCli?.classList.add("d-none");
+        clienteSeleccionado = clienteAdulto;
+        clienteEsAdulto = clienteAdulto;
 
-        // El botón "Siguiente" del modal depende de la edad del cliente.
-        setAccionesVisibles(true);
-        if (botonPC) botonPC.classList.toggle("d-none", edad < 18);
+        if (clienteAdulto) {
+          if (inputCliente) inputCliente.value = res.id_cliente;
+          mostrarPayerConfirmacion(`Factura a nombre de: ${datosCliente.replace("CLIENTE: ", "")}`);
+          divClienteNoEncontrado?.classList.add("d-none");
+          btnAddCli?.classList.add("d-none");
+        } else {
+          if (inputCliente) inputCliente.value = "";
+          mostrarPayerConfirmacion("");
+          divClienteNoEncontrado?.classList.remove("d-none");
+          btnAddCli?.classList.remove("d-none");
+          alertError(
+            "Cliente menor de edad",
+            "El cliente que paga debe ser un adulto. Registre o seleccione al representante.",
+          );
+        }
+
+        actualizarBotonCliente();
       } else {
         if (dataClienteModal) dataClienteModal.innerText = "";
         if (inputCliente) inputCliente.value = "";
+        clienteSeleccionado = false;
+        clienteEsAdulto = false;
+        mostrarPayerConfirmacion("");
         divClienteNoEncontrado?.classList.remove("d-none");
-        botonPC?.classList.add("d-none");
         btnAddCli?.classList.remove("d-none");
-        setAccionesVisibles(false);
+        actualizarBotonCliente();
       }
     } catch (error) {
       alertError("Error", "Lamentablemente ocurrio un error: " + error.message);
@@ -366,6 +484,7 @@ addEventListener("DOMContentLoaded", async function () {
         const res = resultado[0];
         const edad = calcularEdad(res.fn);
 
+        limpiarFactura();
         dataCliente.innerText = `PACIENTE: ${res.nombre} ${res.apellido} Edad: ${edad}`;
         if (inputPaciente) inputPaciente.value = res.id_paciente;
         if (inputCliente) inputCliente.value = "";
@@ -374,7 +493,11 @@ addEventListener("DOMContentLoaded", async function () {
         btnAddPac?.classList.add("d-none"); // ya existe, no hace falta registrarlo
 
         setAccionesVisibles(true);
-        if (botonPC) botonPC.classList.toggle("d-none", edad < 18);
+        aplicarReglaPaciente(edad);
+        const prefillRepresentante = precargarCedulaRepresentante(res.cedula);
+        if (prefillRepresentante && formBuscadorOtroCliente) {
+          await buscarCliente(formBuscadorOtroCliente);
+        }
       } else {
         // Paciente inexistente: se ofrece el registro. Antes el TypeError sobre
         // #inputCliente abortaba aquí y el botón "Agregar Paciente" nunca aparecía.
@@ -382,6 +505,10 @@ addEventListener("DOMContentLoaded", async function () {
         if (inputCliente) inputCliente.value = "";
         if (inputPaciente) inputPaciente.value = 0;
         if (inputIdCita) inputIdCita.value = "";
+        esMenorPaciente = false;
+        clienteSeleccionado = false;
+        clienteEsAdulto = false;
+        mostrarAvisoMenor("");
         botonPC?.classList.add("d-none");
 
         divClienteNoEncontrado?.classList.remove("d-none");
@@ -471,6 +598,8 @@ addEventListener("DOMContentLoaded", async function () {
     if (inputIdCita) inputIdCita.value = "";
     if (inputHospitalizacion) inputHospitalizacion.value = "";
     if (inputCliente) inputCliente.value = "";
+    // La base de la cita/hospitalización no debe arrastrarse a otro paciente.
+    if (inputTotalCita) inputTotalCita.value = "0";
     if (tabla) tabla.innerHTML = "";
     if (tbodyInsumos) tbodyInsumos.innerHTML = "";
     ocultarBotones();
@@ -505,7 +634,11 @@ addEventListener("DOMContentLoaded", async function () {
         const edad = calcularEdad(cita.fecha_de_nacimiento);
         dataCliente.innerText = `PACIENTE: ${cita.nombre_p} ${cita.apellido_p} Edad: ${edad} años`;
         if (inputPaciente) inputPaciente.value = cita.id_paciente;
-        if (botonPC) botonPC.classList.toggle("d-none", edad < 18);
+        aplicarReglaPaciente(edad);
+        const prefillRepresentante = precargarCedulaRepresentante(cita.cedula_p);
+        if (prefillRepresentante && formBuscadorOtroCliente) {
+          await buscarCliente(formBuscadorOtroCliente);
+        }
 
         divClienteNoEncontrado?.classList.add("d-none");
         btnAddPac?.classList.add("d-none");
@@ -558,18 +691,31 @@ addEventListener("DOMContentLoaded", async function () {
       const edad = calcularEdad(hospit.fecha_de_nacimiento);
       dataCliente.innerText = `PACIENTE: ${hospit.nombre_p} ${hospit.apellido_p} Edad: ${edad} años`;
       if (inputPaciente) inputPaciente.value = hospit.id_paciente;
-      if (inputHospitalizacion) inputHospitalizacion.value = hospit.id_hospitalizacion;
 
-      // En hospitalización el botón de "otra persona" no aplica al flujo actual.
-      if (botonPC) botonPC.classList.remove("d-none");
+      // 2. Limpiar datos previos (incluye cliente y base anteriores)
+      limpiarFactura();
+
+      // 3. Restaurar los datos de la hospitalización que limpiarFactura borró
+      if (inputHospitalizacion) inputHospitalizacion.value = hospit.id_hospitalizacion;
+      if (inputTotalCita) {
+        // Base en divisa: horas + insumos. Los insumos ya están incluidos en
+        // total_MoEx y se muestran en la vista PHP; agregarlos otra vez a
+        // dataInsumo duplicaba el cobro.
+        inputTotalCita.value = num(hospit.total_MoEx).toFixed(2);
+      }
+
+      // 4. Regla de edad: un menor debe facturarse a nombre de un adulto.
+      aplicarReglaPaciente(edad);
+      const prefillRepresentante = precargarCedulaRepresentante(hospit.cedula);
+      if (prefillRepresentante && formBuscadorOtroCliente) {
+        await buscarCliente(formBuscadorOtroCliente);
+      }
 
       divClienteNoEncontrado?.classList.add("d-none");
       btnAddPac?.classList.add("d-none");
 
-      // 2. Limpiar datos previos (conservando insumos: se recargan abajo)
-      limpiarFactura();
-
-      // 3. Cargar servicios e insumos de la hospitalización
+      // 5. Los servicios sí se agregan aparte: el servidor los inserta como
+      // detalle propio y total_MoEx no los incluye.
       (hospit.servicios ?? []).forEach((servicio) => {
         insertarServicio(
           servicio.id_servicioMedico,
@@ -577,20 +723,6 @@ addEventListener("DOMContentLoaded", async function () {
           `${servicio.nombre_d} ${servicio.apellido_d}`,
           num(servicio.precios_servicio),
           servicio.id_doctor,
-        );
-      });
-
-      (hospit.insumos ?? []).forEach((insumo) => {
-        // insertarInsumoSeleccionado() avisa con un Swal por cada insumo: en
-        // hospitalización son varios y se acumulan. Se inserta en silencio.
-        insertarInsumoSeleccionado(
-          insumo.id_entradaDeInsumo,
-          insumo.cantidad,
-          insumo.nombre,
-          insumo.precio,
-          insumo.iva,
-          insumo.medida,
-          { silencioso: true },
         );
       });
 
@@ -898,7 +1030,7 @@ addEventListener("DOMContentLoaded", async function () {
   }
 
   btnSiguiente.addEventListener("click", () => {
-    botonPC?.classList.remove("d-none");
+    actualizarBotonCliente();
   });
 
   /**
@@ -1886,15 +2018,31 @@ addEventListener("DOMContentLoaded", async function () {
 
   //llamar la funcion de buscar el paciente
   pacienteClienteCheck?.addEventListener("change", function () {
+    if (esMenorPaciente && !this.checked) {
+      this.checked = true;
+      alertError(
+        "Paciente menor de edad",
+        "La factura de un menor debe emitirse a nombre de un representante adulto.",
+      );
+    }
+
     if (this.checked) {
       cajaBuscadorCliente?.classList.remove("d-none");
-      // Con el switch activo hay que elegir un cliente antes de continuar.
-      botonPC?.classList.add("d-none");
     } else {
       cajaBuscadorCliente?.classList.add("d-none");
       if (inputCliente) inputCliente.value = "";
-      botonPC?.classList.remove("d-none");
+      clienteSeleccionado = false;
+      clienteEsAdulto = false;
+      if (dataClienteModal) dataClienteModal.innerText = "";
+      mostrarPayerConfirmacion("");
     }
+
+    actualizarBotonCliente();
+  });
+
+  // Al abrir el modal, el botón "Siguiente" debe reflejar la regla vigente.
+  byId("modal-cliente")?.addEventListener("shown.bs.modal", () => {
+    actualizarBotonCliente();
   });
 
   //buscar otro cliente
@@ -1972,11 +2120,11 @@ addEventListener("DOMContentLoaded", async function () {
     formularioPaciente.addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const cedula = (inputCedulaPaciente?.value ?? "").trim();
-      if (!/^[1-9]\d{6,7}$/.test(cedula)) {
+      const cedula = (inputCedulaPaciente?.value ?? "").trim().toUpperCase();
+      if (!/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/.test(cedula)) {
         alertError(
           "Error",
-          "Ingrese una cédula válida de 7 u 8 dígitos.",
+          "Ingrese una cédula válida de 7 u 8 dígitos (o la referencia -R de un menor).",
         );
         return;
       }

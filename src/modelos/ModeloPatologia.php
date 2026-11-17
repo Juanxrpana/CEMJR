@@ -265,7 +265,7 @@ class ModeloPatologia extends ModelBase
     {
         // 7-8 dígitos (igual que el resto de modelos): con {7,8} se rechazaban
         // todas las cédulas de 7 dígitos y el módulo de control fallaba.
-        if (!preg_match("/^([1-9]{1})([0-9]{6,7})$/", $cedulaPac)) {
+        if (!preg_match("/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/", (string)$cedulaPac)) {
             throw new \InvalidArgumentException("La cédula debe contener entre 7 y 8 dígitos.");
         }
         $this->cedulaPac = $cedulaPac;

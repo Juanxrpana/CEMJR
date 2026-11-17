@@ -13,6 +13,9 @@ import {
 } from "../generic/funtionGeneric.js";
 
 import { inicializarValidacionFormulario } from "../generic/expresionesModulares.js";
+import { inicializarBotonCedulaMenor } from "../generic/cedulaMenor.js";
+
+inicializarBotonCedulaMenor();
 addEventListener("DOMContentLoaded", function () {
   console.log("Citas....");
 
@@ -81,7 +84,7 @@ addEventListener("DOMContentLoaded", function () {
   const traerPacienteCita = async () => {
     try {
       let [addClass, removeClass] = ["", ""];
-      if (cedulaCita.value.length == 7 || cedulaCita.value.length == 8) {
+      if (/^[1-9][0-9]{6,7}(-R[0-9]{1,2})?$/.test(cedulaCita.value.trim())) {
         const result = await executePetition(
           `/Citas/mostrarDataPaciente/${nacionalidadCita.value}/${cedulaCita.value}`,
           "GET",

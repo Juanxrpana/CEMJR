@@ -379,3 +379,31 @@ function eliminar()
 		exit;
 	}
 }
+
+// Genera la cédula de referencia de un menor a partir de la del representante.
+function generarCedulaMenor()
+{
+	if (empty($_POST)) {
+		http_response_code(409);
+		echo json_encode(['ok' => false, 'error' => 'Error al realizar la petición :(']);
+		exit;
+	}
+
+	try {
+		$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
+		if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
+			http_response_code(403);
+			echo json_encode(['ok' => false, 'error' => 'Token CSRF inválido']);
+			exit;
+		}
+
+		$modelo = new ModeloPacientes();
+		$cedula = $modelo->generarCedulaMenor($_POST['cedulaRepresentante'] ?? '');
+
+		echo json_encode(['ok' => true, 'cedula' => $cedula]);
+	} catch (InvalidArgumentException $e) {
+		http_response_code(409);
+		echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+		exit;
+	}
+}

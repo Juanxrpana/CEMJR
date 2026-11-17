@@ -37,7 +37,11 @@
                                 <option value="E">E</option>
                             </select>
 
-                            <input class="form-control txt-custom input-validar inputs" name="cedula" type="number" placeholder="Cédula del paciente" id="cedulaControl">
+                            <input class="form-control txt-custom input-validar inputs" name="cedula" type="text"
+                                inputmode="numeric" maxlength="13" autocomplete="off"
+                                placeholder="Cédula del paciente (7-8 dígitos)"
+                                id="cedulaControl"
+                                oninput="this.value = this.value.toUpperCase().replace(/[^0-9R-]/g, '')">
 
                             <span class="icono-der">
                                 <svg class="check d-none" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
@@ -375,6 +379,7 @@
                                 </span>
                             </div>
                             <p class="error-msg d-none"></p>
+                            <small id="diasRegresoAyuda" class="form-text text-muted"></small>
 
                         </div>
 

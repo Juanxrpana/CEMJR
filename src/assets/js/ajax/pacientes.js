@@ -13,6 +13,10 @@ import {
 } from "../generic/funtionGeneric.js";
 
 import { inicializarValidacionFormulario } from "../generic/expresionesModulares.js";
+import { inicializarBotonCedulaMenor } from "../generic/cedulaMenor.js";
+
+inicializarBotonCedulaMenor();
+
 const url = "/Pacientes";
 
 const modalPaciente = new bootstrap.Modal(
