@@ -7,6 +7,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 import { mdRender, textoPlano, escaparHtml } from "./generic/chatMarkdown.js";
+import { alertSuccess, alertError } from "./generic/funtionGeneric.js";
 
 const BASE = "";
 const ENDPOINT = `${BASE}/Chat/preguntar`;
@@ -151,6 +152,26 @@ if ($btnFlotante && $modalEl) {
             }
         }
 
+        if (resp.tipo_respuesta === "registro_paciente" && resp.paciente_borrador) {
+            const claves = [
+                ["nacionalidad", "Nacionalidad"],
+                ["cedula", "Cédula"],
+                ["nombre", "Nombre"],
+                ["apellido", "Apellido"],
+                ["telefono", "Teléfono"],
+                ["direccion", "Dirección"],
+                ["fn", "Fecha de nacimiento"],
+                ["genero", "Género"],
+            ];
+            contenido += `<p class="chat-recomendacion">Borrador de paciente (revisa antes de registrar):</p><ul>`;
+            for (const [clave, etiqueta] of claves) {
+                if (resp.paciente_borrador[clave]) {
+                    contenido += `<li>${escaparHtml(etiqueta)}: ${escaparHtml(String(resp.paciente_borrador[clave]))}</li>`;
+                }
+            }
+            contenido += `</ul>`;
+        }
+
         if (typeof resp.progreso === "number" && resp.progreso > 0 && resp.progreso < 100) {
             contenido += `
                 <div class="chat-progreso">
@@ -207,7 +228,12 @@ if ($btnFlotante && $modalEl) {
         historial = cargarHistorial();
         const ultimoAsistente = [...historial].reverse().find((m) => m.rol === "asistente");
         pintar();
-        pintarAccion(ultimoAsistente?.resp?.accion_sugerida ?? null);
+        const respGuardada = ultimoAsistente?.resp ?? {};
+        if (respGuardada.tipo_respuesta === "registro_paciente" && respGuardada.paciente_borrador) {
+            pintarAccionRegistro(respGuardada.paciente_borrador);
+        } else {
+            pintarAccion(respGuardada.accion_sugerida ?? null);
+        }
         $input.focus();
     }
 
@@ -266,6 +292,57 @@ if ($btnFlotante && $modalEl) {
         }
     }
 
+    function pintarAccionRegistro(borrador) {
+        if (!borrador) {
+            pintarAccion(null);
+            return;
+        }
+        $accion.innerHTML = `<button type="button" class="btn btn-modals" id="btnRegistrarPaciente">Registrar paciente</button>`;
+        $accion.classList.add("visible");
+        document.getElementById("btnRegistrarPaciente")?.addEventListener("click", function () {
+            registrarPaciente(borrador, this);
+        });
+    }
+
+    async function registrarPaciente(borrador, boton) {
+        boton.disabled = true;
+        try {
+            const respuesta = await fetch("/Pacientes/guardarDesdeChatbot", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": csrfToken(),
+                },
+                body: JSON.stringify(borrador),
+            });
+            const datos = await respuesta.json().catch(() => null);
+
+            if (!datos || datos.ok !== true) {
+                if (datos && datos.existe) {
+                    alertError("Paciente existente", "El paciente ya está registrado. Puedes continuar el análisis con esa cédula.");
+                } else {
+                    alertError("No se pudo registrar", datos?.error || `HTTP ${respuesta.status}`);
+                }
+                boton.disabled = false;
+                return;
+            }
+
+            const nombre = datos.paciente
+                ? `${datos.paciente.nombre} ${datos.paciente.apellido}`.trim()
+                : "";
+            alertSuccess(
+                nombre
+                    ? `Paciente registrado: ${nombre}`
+                    : "El paciente se registró correctamente."
+            );
+            pintarAccion(null);
+        } catch (error) {
+            console.error("Registro de paciente:", error);
+            alertError("Error", error.message || "No se pudo registrar el paciente.");
+            boton.disabled = false;
+        }
+    }
+
     // ── Envío ───────────────────────────────────────────────────────────────
     function estadoCargando(activo) {
         cargando = activo;
@@ -313,7 +390,11 @@ if ($btnFlotante && $modalEl) {
             historial.push({ rol: "asistente", resp: datos, hora: horaActual() });
             guardarHistorial();
             pintar();
-            pintarAccion(datos.accion_sugerida);
+            if (datos.tipo_respuesta === "registro_paciente" && datos.paciente_borrador) {
+                pintarAccionRegistro(datos.paciente_borrador);
+            } else {
+                pintarAccion(datos.accion_sugerida);
+            }
         } catch (error) {
             console.error("Asistente IA:", error);
             historial.push({

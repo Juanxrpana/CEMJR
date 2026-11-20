@@ -37,15 +37,15 @@ Este contrato es consolidado: cubre `src/vistas` y sus subcarpetas de primer niv
 |---|---|
 | `vistaIniciarSesion` | `iniciarSesion.php` (formulario de login), `vistaError.php` (error de acceso). |
 | `vistaInicio` | `vistaInicio.php` (contenido de inicio/dashboard). |
-| `vistaPacientes` | `pacientes.php`, `pacientesPapelera.php`, `tablaPacientes.php`, `tablaHistorialSalud.php`, `modalAgregarPaciente.php`, `modalEditarPaciente.php`. |
+| `vistaPacientes` | `pacientes.php`, `pacientesPapelera.php`, `tablaPacientes.php`, `tablaHistorialSalud.php`, `modalAgregarPaciente.php` (incluye `btnCedulaMenor` y cédula de texto con sufijo `-R`), `modalEditarPaciente.php`. |
 | `vistaCliente` | `vistaCliente.php`, `modalAgregarCliente.php`, `modalEditarCliente.php`. |
-| `vistasCitas` | `vistaCitas.php`, `modalesCitas-Control.php`. |
-| `vistaControl` | `vistaControl.php`, `modalAgregarControl.php`, `modalesSintomas.php`. |
-| `vistaHospitalizacion` | `hospitalizacion.php`, `hospitalizacionesRealizadas.php`, `modalHopitalizacion.php`, `modal/modalAgregarHospitalizacion.php`, `modal/modalAgregarInsumos.php`, `modal/modalEditarHospitalizacion.php`, `modal/modalEditarInsumos.php`, `modal/modalEliminarHospitalizacion.php`, `modal/modalPrecioHora.php`. |
+| `vistasCitas` | `vistaCitas.php`, `modalesCitas-Control.php` (incluye `btnCedulaMenor` y cédula con sufijo `-R`). |
+| `vistaControl` | `vistaControl.php` (carga `doctorSchedule.js`), `modalAgregarControl.php` (incluye `diasRegresoAyuda`), `modalesSintomas.php`. |
+| `vistaHospitalizacion` | `hospitalizacion.php`, `hospitalizacionesRealizadas.php`, `modalHopitalizacion.php` (cédula con sufijo `-R`), `modal/modalAgregarHospitalizacion.php`, `modal/modalAgregarInsumos.php`, `modal/modalEditarHospitalizacion.php`, `modal/modalEditarInsumos.php`, `modal/modalEliminarHospitalizacion.php`, `modal/modalPrecioHora.php`. |
 | `vistaInsumos` | `vistaInsumos.php`, `vistaInsumosVencidos.php`, `insumosPapelera.php`, `modalInsumos.php`, `paginationInsumos.php`. |
 | `vistaEntrada` | `vistaEntrada.php`, `vistaEntradaDesactiva.php`, `modalEntrada.php`. |
 | `vistaProveedores` | `vistaProveedores.php`, `vistaProveedoresPapelera.php`, `modalProveedores.php`. |
-| `vistaFactura` | `factura.php`, `facturaCita.php`, `facturaHospitalizacion.php`, `modalAgregarFactura.php`, `comprobante.php`, `comprobanteHospitalizacion.php`, `vistaFacturaPdf.php`, `vistaFacturaPdf2.php`, `vistaFacturaPdf3.php`. |
+| `vistaFactura` | `factura.php`, `facturaCita.php`, `facturaHospitalizacion.php`, `modalAgregarFactura.php` (`avisoFacturaMenor`, `datosPagoConfirmacion`), `comprobante.php`, `comprobanteHospitalizacion.php`, `vistaFacturaPdf.php`, `vistaFacturaPdf2.php`, `vistaFacturaPdf3.php`; las vistas de factura incluyen `vistaCliente/modalAgregarCliente.php`. |
 | `vistaDoctores` | `vistaDoctores.php`, `modal/modalAgregarDoctores.php`, `modal/modalEditarDoctores.php`, `modal/modalesEspecialidades.php`, `modal/infoModalDoctores.php`. |
 | `vistaServicios` | `vistaServiciosMedicos.php`, `modalesCategoria.php`. |
 | `vistaPatologia` | `patologia.php`, `modalesPatologia.php`. |
@@ -68,6 +68,9 @@ Este contrato es consolidado: cubre `src/vistas` y sus subcarpetas de primer niv
 - **Módulos JS.** Cada vista carga su módulo (`pacientes.js`, `citas.js`, `control.js`, `f.js`, `hospitalizacion.js`, etc.) y, a veces, un archivo de ayuda interactiva. `footer.php` carga los módulos globales; las vistas cargan los específicos.
 - **Codificación de salida.** Algunas vistas usan `htmlspecialchars` y otras imprimen `<?= $variable ?>` directamente. No se debe asumir que toda salida está escapada; al añadir datos nuevos hay que escapar en la vista.
 - **PDFs.** `vistaFactura/vistaFacturaPdf*.php` usan `$this->modelo` y se incluyen desde el controlador; no son accesibles directamente. `FacturaPdf` adapta la codificación a Windows-1252.
+- **Facturación de menores.** Las vistas de factura incluyen `avisoFacturaMenor` y `datosPagoConfirmacion`; `f.js` exige un cliente adulto cuando el paciente es menor y muestra los datos del pagador. Los campos de cédula aceptan el sufijo entre `-R1` y `-R99`.
+- **Doble conteo.** `facturaCita.php` deja `inputTotalCita=0` porque el servicio de la cita ya viaja en `servicios[]`; `facturaHospitalizacion.php` envía solo `total_MoEx` como base de horas/insumos y los servicios se agregan aparte. `f.js` ya no vuelve a insertar los insumos de la hospitalización.
+- **Control y fecha de regreso.** `modalAgregarControl.php` incluye `diasRegresoAyuda`; `vistaControl.php` carga `doctorSchedule.js`; `control.js` consulta `/Control/horarioUltimaCitaPaciente/{cedula}` y valida el día antes de guardar.
 - **Chat.** `vistaChat/chat.php` y `modalChat.php` cargan la interfaz del asistente; `chatModal.js` usa `/Chat/preguntar` y `/Chat/borrarMemoria`. `chatInterfaz.js` espera endpoints de conversaciones que no están definidos en `ControllerChat`.
 
 ## Side Effects

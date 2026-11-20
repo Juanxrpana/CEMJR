@@ -529,7 +529,7 @@ body.sidenav-open::after {
    valores propios donde el token existente no da contraste (campos, rayas). */
 :root {
     --modal-texto: #1b1a1a;                          /* = --color-text-card claro */
-    --modal-texto-suave: #4d5865;                    /* secundario, sigue leyéndose negro */
+    --modal-texto-suave: #c7c7c7;                    /* secundario, sigue leyéndose negro */
     --modal-campo-bg: #ffffff;
     --modal-campo-texto: #1b1a1a;
     --modal-campo-linea: #c9d3dd;

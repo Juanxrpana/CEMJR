@@ -786,18 +786,12 @@ class ModeloDoctores extends ModelBase
 
     public function setNombre($nombre)
     {
-        if (!preg_match("/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})*$/", $nombre)) {
-            throw new \InvalidArgumentException("El nombre debe iniciar con mayúscula y tener al menos 3 letras.");
-        }
-        $this->nombre = $nombre;
+        $this->nombre = \App\config\ValidacionNombre::validar($nombre, 25, 'nombre');
     }
 
     public function setApellido($apellido)
     {
-        if (!preg_match("/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})*$/", $apellido)) {
-            throw new \InvalidArgumentException("El apellido debe iniciar con mayúscula y tener al menos 3 letras.");
-        }
-        $this->apellido = $apellido;
+        $this->apellido = \App\config\ValidacionNombre::validar($apellido, 25, 'apellido');
     }
 
     public function setTelefono($telefono)

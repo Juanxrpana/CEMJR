@@ -1,9 +1,10 @@
 // Objeto con las expresiones regulares para validar cada tipo de campo
 const expresiones = {
     nombre: {
-        expresion: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})*$/,
+        // Acepta palabras con inicial mayúscula, partículas (De, Del, La, Los) y Jr.
+        expresion: /^(?=.*[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})(?:(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})|(?:De|de|Del|del|La|la|Los|los|Jr))(?: (?:(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})|(?:De|de|Del|del|La|la|Los|los|Jr)))*$/u,
         mensajeError:
-            "El nombre debe iniciar con mayúscula, tener al menos 3 letras y puede incluir un segundo nombre separado por un espacio.",
+            "El nombre debe iniciar con mayúscula, usar solo letras y espacios, y permitir las partículas De, Del, La, Los y Jr.",
     },
     categoria: {
         // Inicia con mayúscula, permite letras (mayúsculas o minúsculas), acentos y espacios.
@@ -24,9 +25,9 @@ const expresiones = {
     },
 
     apellido: {
-        expresion: /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})*$/,
+        expresion: /^(?=.*[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})(?:(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})|(?:De|de|Del|del|La|la|Los|los|Jr))(?: (?:(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})|(?:De|de|Del|del|La|la|Los|los|Jr)))*$/u,
         mensajeError:
-            "El Apellido debe contener solo letras ademas iniciar con una letra mayúscula y tenga al menos 3 caracteres",
+            "El apellido debe iniciar con mayúscula, usar solo letras y espacios, y permitir las partículas De, Del, La, Los y Jr.",
     },
 
     usuario: {

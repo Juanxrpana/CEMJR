@@ -14,7 +14,7 @@ Este contrato es consolidado: cubre la raíz de `src/assets/js` y las subcarpeta
 
 | Archivo | Rol |
 |---|---|
-| `f.js` | Facturación activa: carga paciente/cliente, servicios, insumos, métodos de pago, referencias, cálculo en bolívares/divisas, IVA, validación de pagos y confirmación. Es el módulo que cargan `factura.php`, `facturaCita.php` y `facturaHospitalizacion.php`. |
+| `f.js` | Facturación activa: carga paciente/cliente, servicios, insumos, métodos de pago, referencias, cálculo en bolívares/divisas, IVA, validación de pagos y confirmación. Incluye la regla de menores/representante, el aviso `avisoFacturaMenor`, los datos del pagador y la corrección de doble conteo. Es el módulo que cargan `factura.php`, `facturaCita.php` y `facturaHospitalizacion.php`. |
 | `factura.js` | Variante antigua de facturación; las vistas actuales cargan `f.js`. Contiene búsquedas de paciente/cliente y pintado con `innerHTML`. |
 | `insumo.js` | Inventario: lista, papelera, creación/edición, vencimientos, imágenes y búsqueda. |
 | `mantenimiento.js` | Respaldos: descarga desde la nube, listado de ZIP, verificación de usuario y restauración. |
@@ -44,6 +44,7 @@ Módulos CRUD por entidad: `pacientes.js`, `clientes.js`, `citas.js`, `control.j
 | `chatMarkdown.js` | Escapa HTML y renderiza Markdown básico de forma segura. |
 | `Paginator.js` | Paginador reutilizable. |
 | `imagePreview.js` | Vista previa y fallback de imágenes. |
+| `cedulaMenor.js` | `inicializarBotonCedulaMenor`: pide la cédula del representante, llama `/Pacientes/generarCedulaMenor` y escribe la referencia `-R` en `#cedulaPaciente`. Se inicializa desde pacientes, citas, control, hospitalización y facturación. |
 
 ### `hospitalizacion/`
 
@@ -56,6 +57,9 @@ Módulos CRUD por entidad: `pacientes.js`, `clientes.js`, `citas.js`, `control.j
 - **DataTables.** `initDataTable(selector, urlControlador, columnas, ...)` configura `serverSide`, responsive y la columna de botones; espera el JSON de DataTables (`draw`, `recordsTotal`, `recordsFiltered`, `data`).
 - **URLs.** La mayoría de los módulos usan rutas absolutas desde la raíz (`/Pacientes/...`, `/Factura/...`, `/Citas/...`). Las vistas usan `$urlBase` para recursos estáticos. `chatModal.js` fija `BASE=""`.
 - **Facturación.** `f.js` trabaja con montos en centavos para evitar decimales, muestra equivalencia Bs/USD, aplica IVA, valida métodos de pago y referencias, y envía `tipo_cambio`, servicios, insumos, doctores, cantidades, precios, pagos y total. `factura.js` es una variante antigua; no se debe asumir que ambas están activas.
+- **Menores y representante.** `f.js` calcula la edad, marca `esMenorPaciente`, exige un cliente adulto distinto del menor y muestra `avisoFacturaMenor` y `datosPagoConfirmacion`. Si la cédula termina en `-R`, precarga la cédula base del representante en el buscador de cliente.
+- **Doble conteo.** `f.js` ya no recorre los insumos de la hospitalización para insertarlos otra vez; usa `total_MoEx` como base de horas/insumos y agrega los servicios aparte. En cita, `inputTotalCita` vale 0 porque el servicio viaja en `servicios[]`.
+- **Control médico.** `ajax/control.js` consulta `/Control/horarioUltimaCitaPaciente/{cedula}`, muestra `diasRegresoAyuda`, valida que la fecha de regreso caiga en un día del doctor y limpia `buscarDoctores`/`divDoctores` al abrir el modal.
 - **Chat.** `chatModal.js` guarda `cem_chat_session_id` y `cem_chat_historial` en localStorage, envía `{consulta, session_id}` a `/Chat/preguntar` y usa `mdRender`/`textoPlano` para escapar la salida. `chatInterfaz.js` espera endpoints de conversaciones no implementados en `ControllerChat`; es código legado o incompleto.
 - **WebSocket.** `webSocket.js` usa `ws://localhost:8080` y `http://localhost:8080`; no envía token de sesión; reintenta con `setTimeout` cada 5 s. La CSP debe permitir ese origen.
 - **Mantenimiento.** `mantenimiento.js` llama `bajarBdsNube` y `restaurarRespaldo` por GET y muestra los nombres de los ZIP; no distingue completo/diferencial/incremental más allá de quitar prefijos.

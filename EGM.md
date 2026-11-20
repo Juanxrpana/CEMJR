@@ -14,11 +14,11 @@ Arquitectura observada:
 
 Flujo de negocio principal:
 
-1. Se registra un **paciente** y, si aplica, un **cliente** pagador.
+1. Se registra un **paciente** y, si aplica, un **cliente** pagador. Un menor usa una cédula de referencia `cedulaRepresentante-R1`; su factura debe ir a nombre de un representante adulto.
 2. Se agenda una **cita** con servicio, doctor, fecha y hora; la cita pasa por reserva, pendiente y realizada.
-3. La atención genera un **control** clínico con diagnóstico, historia, síntomas, patologías, indicaciones y nota.
+3. La atención genera un **control** clínico con diagnóstico, historia, síntomas, patologías, indicaciones y nota. La fecha de regreso se valida contra el horario del doctor de la última cita.
 4. Si hay internamiento, se registra una **hospitalización** con costos por hora, servicios e insumos.
-5. El cierre genera una **factura** en bolívares con tasa de cambio, detalle de servicios/insumos/hospitalización y pagos.
+5. El cierre genera una **factura** en bolívares con tasa de cambio, detalle de servicios/insumos/hospitalización y pagos. El cliente debe ser adulto; si el paciente es menor, se usa al representante.
 6. El inventario se mueve por **entradas** de proveedor y lotes con vencimiento; la facturación descuenta lotes.
 7. Usuarios, roles, permisos y **bitácora** controlan y registran el acceso.
 
@@ -43,6 +43,8 @@ Fuera de alcance: `src/controllers/Reportes`, `ControllerEstadisticas.php`, `Con
 - **CSRF.** La mayoría de las acciones mutantes comparan `$_SESSION['csrf_token']` con `X-CSRF-Token` o `csrf_token`; la cobertura no es uniforme.
 - **Estados.** Entidades y catálogos usan `estado` (`ACT`, `DES`, `BLOQUED`); las citas usan `Reservado`, `Pendiente`, `Realizadas` y `Expirado`; las facturas usan `ACT` y estados de anulación/reporte.
 - **Facturación.** El servidor recalcula precios y total desde la base; `detalle_factura` y `pagodefactura` son la fuente del cobro. La tasa de cambio se guarda en `factura.tipo_cambio`.
+- **Menores y representante.** La cédula de un menor es `cedulaRepresentante-R1`…`-R99`. `ModeloPacientes::generarCedulaMenor` la genera; `ModeloFactura` exige un cliente adulto y rechaza facturar a un menor contra su propia cédula. `f.js` refleja la regla en la interfaz.
+- **Control clínico.** `ModeloControl` valida la fecha de regreso contra los días laborables del doctor de la última cita; si no hay cita/horario, no bloquea.
 - **Inventario.** `entrada` + `entrada_insumo` representan lotes; `DescontarLotes`, `insert_entrada` e `insert_insumo` son procedimientos usados por los modelos.
 - **Vistas incluidas.** Las vistas no son endpoints autónomos; esperan variables del controlador y, muchas, una sesión activa.
 - **Sin build JS.** Los módulos se cargan directamente; los imports relativos y los IDs del DOM son parte del contrato.

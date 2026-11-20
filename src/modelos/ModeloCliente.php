@@ -115,6 +115,30 @@ class ModeloCliente extends ModelBase
         }
     }
 
+    /**
+     * Devuelve el cliente activo con la cédula indicada, o null.
+     */
+    public function buscarPorCedula($cedula)
+    {
+        $cedula = trim((string) $cedula);
+        if ($cedula === '') {
+            return null;
+        }
+
+        try {
+            $sql = "SELECT id_cliente, nacionalidad, cedula, nombre, apellido, telefono, direccion, fn, genero
+                    FROM cliente
+                    WHERE cedula = :cedula AND estado = 'ACT'
+                    LIMIT 1";
+            $this->setSQL($sql);
+            $fila = $this->search(['cedula' => $cedula], false);
+
+            return is_array($fila) && !empty($fila) ? $fila : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     // ── PRIVADOS─────────────────────────────────────────
 
     private function insertar()
@@ -366,18 +390,12 @@ class ModeloCliente extends ModelBase
 
     public function setNombre($nombre)
     {
-        if (!is_scalar($nombre) || mb_strlen((string)$nombre, 'UTF-8') > 25 || !preg_match("/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})*$/", (string)$nombre)) {
-            throw new \InvalidArgumentException("El nombre debe iniciar con mayúscula, tener al menos 3 letras, máximo 25 caracteres y puede incluir un segundo nombre separado por un espacio.");
-        }
-        $this->nombre = $nombre;
+        $this->nombre = \App\config\ValidacionNombre::validar($nombre, 25, 'nombre');
     }
 
     public function setApellido($apellido)
     {
-        if (!is_scalar($apellido) || mb_strlen((string)$apellido, 'UTF-8') > 25 || !preg_match("/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,}(\s[A-ZÁÉÍÓÚÑ][a-záéíóúñ]{2,})*$/", (string)$apellido)) {
-            throw new \InvalidArgumentException("El apellido debe iniciar con mayúscula, tener al menos 3 letras, máximo 25 caracteres y puede incluir un segundo nombre separado por un espacio.");
-        }
-        $this->apellido = $apellido;
+        $this->apellido = \App\config\ValidacionNombre::validar($apellido, 25, 'apellido');
     }
 
     public function setTelefono($telefono)

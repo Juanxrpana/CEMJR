@@ -132,12 +132,14 @@
 
 
 
+/* forzando vainas hay q ver donde se solapa */
+#avisoFacturaMenor{
+    color: var(--color-error) !important;
+}
 
-
-
-
-
-
+.alert-warning{
+    color: var(--color-error) !important;
+}
 
 
 

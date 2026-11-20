@@ -28,6 +28,7 @@ return [
     "getHistorialSalud" => "consultar",
     "getHistorialSaludAjax" => "consultar",
     "generarCedulaMenor" => "consultar",
+    "guardarDesdeChatbot" => "guardar",
 
 
     //Clientes

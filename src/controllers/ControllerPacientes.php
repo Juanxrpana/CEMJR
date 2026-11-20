@@ -1,6 +1,7 @@
 <?php
 
 use App\modelos\ModeloPacientes;
+use App\modelos\ModeloCliente;
 use App\modelos\ModeloBitacora;
 use App\modelos\ModeloSanetizarJSON;
 // use App\
@@ -404,6 +405,131 @@ function generarCedulaMenor()
 	} catch (InvalidArgumentException $e) {
 		http_response_code(409);
 		echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+		exit;
+	}
+}
+
+// Crea un paciente a partir del borrador confirmado del chatbot.
+// Lo ejecuta el navegador de recepción con sesión y CSRF; FastAPI no escribe.
+function guardarDesdeChatbot()
+{
+	if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+		http_response_code(405);
+		echo json_encode(['ok' => false, 'error' => 'Método no permitido.']);
+		exit;
+	}
+
+	if (empty($_SESSION['id_usuario'])) {
+		http_response_code(401);
+		echo json_encode(['ok' => false, 'error' => 'Debe iniciar sesión para registrar un paciente.']);
+		exit;
+	}
+
+	$csrf_token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $_POST['csrf_token'] ?? null;
+	if (empty($_SESSION['csrf_token']) || empty($csrf_token) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
+		http_response_code(403);
+		echo json_encode(['ok' => false, 'error' => 'Token CSRF inválido.']);
+		exit;
+	}
+
+	$cuerpo = json_decode(file_get_contents('php://input'), true);
+	$datos = is_array($cuerpo) ? $cuerpo : $_POST;
+
+	$modelo = new ModeloPacientes();
+	$modeloCliente = new ModeloCliente();
+
+	try {
+		$nacionalidad = trim((string) ($datos['nacionalidad'] ?? 'V'));
+		$cedula = trim((string) ($datos['cedula'] ?? ''));
+		$nombre = trim((string) ($datos['nombre'] ?? ''));
+		$apellido = trim((string) ($datos['apellido'] ?? ''));
+		$telefono = trim((string) ($datos['telefono'] ?? ''));
+		$direccion = trim((string) ($datos['direccion'] ?? ''));
+		$fn = trim((string) ($datos['fn'] ?? ''));
+		$genero = trim((string) ($datos['genero'] ?? ''));
+		$cedulaRepresentante = trim((string) ($datos['cedulaRepresentante'] ?? ''));
+
+		$modelo->setNacionalidad($nacionalidad);
+		$modelo->setNombre($nombre);
+		$modelo->setApellido($apellido);
+		$modelo->setTelefono($telefono);
+		$modelo->setDireccion($direccion);
+		$modelo->setFn($fn);
+		$modelo->setGenero($genero);
+
+		// Regla de menores: cédula -R a partir del representante.
+		$esMenor = false;
+		$fechaNacimiento = \DateTime::createFromFormat('Y-m-d', $fn);
+		if ($fechaNacimiento && $fechaNacimiento->format('Y-m-d') === $fn) {
+			$esMenor = (int) $fechaNacimiento->diff(new \DateTime('today'))->y < 18;
+		}
+
+		if ($esMenor) {
+			if (!preg_match('/^[1-9][0-9]{6,7}$/', $cedulaRepresentante)) {
+				http_response_code(409);
+				echo json_encode(['ok' => false, 'campo' => 'cedulaRepresentante', 'error' => 'La cédula del representante debe tener entre 7 y 8 dígitos.']);
+				exit;
+			}
+
+			$representante = $modeloCliente->buscarPorCedula($cedulaRepresentante);
+			if (!$representante) {
+				$representante = $modelo->buscarPorCedula($cedulaRepresentante);
+			}
+
+			if (!$representante) {
+				http_response_code(409);
+				echo json_encode(['ok' => false, 'representante_no_registrado' => true, 'error' => 'El representante no está registrado. Regístrelo primero en el módulo de pacientes o clientes.']);
+				exit;
+			}
+
+			$cedula = $modelo->generarCedulaMenor($cedulaRepresentante);
+		}
+
+		$modelo->setCedula($cedula);
+
+		$existente = $modelo->buscarPorCedula($cedula);
+		if ($existente) {
+			http_response_code(409);
+			echo json_encode(['ok' => false, 'existe' => true, 'paciente' => [
+				'id' => hashId((int) $existente['id_paciente']),
+				'nombre' => $existente['nombre'],
+				'apellido' => $existente['apellido'],
+				'cedula' => $existente['cedula'],
+			]]);
+			exit;
+		}
+
+		$insercion = $modelo->guardarPaciente($_SESSION['id_usuario']);
+
+		if (!is_array($insercion) || ($insercion[0] ?? null) !== 'exito') {
+			http_response_code(409);
+			echo json_encode(['ok' => false, 'error' => is_string($insercion) ? $insercion : 'No se pudo guardar el paciente.']);
+			exit;
+		}
+
+		$creado = $modelo->buscarPorCedula($cedula);
+
+		$bitacora = new ModeloBitacora();
+		$bitacora->setId_usuario($_SESSION['id_usuario']);
+		$bitacora->setTabla('paciente');
+		$bitacora->setActividad('Ha insertado un paciente desde el chatbot');
+		$bitacora->insertarBitacora($_SESSION['id_usuario']);
+
+		echo json_encode(['ok' => true, 'paciente' => [
+			'id' => $creado ? hashId((int) $creado['id_paciente']) : null,
+			'nombre' => $nombre,
+			'apellido' => $apellido,
+			'cedula' => $cedula,
+		]]);
+		exit;
+	} catch (\InvalidArgumentException $e) {
+		http_response_code(409);
+		echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+		exit;
+	} catch (\Throwable $e) {
+		error_log('Error en guardarDesdeChatbot: ' . $e->getMessage());
+		http_response_code(500);
+		echo json_encode(['ok' => false, 'error' => 'No se pudo guardar el paciente.']);
 		exit;
 	}
 }

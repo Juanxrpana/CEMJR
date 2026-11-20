@@ -85,3 +85,23 @@ Por tanto, este reporte valida **contratos contra código y esquema**, no el com
 ## Conclusión
 
 Los contratos describen el sistema real y no el modelo ideal. Las tres desviaciones encontradas eran de redacción/alcance, no de arquitectura. Las anomalías restantes son hallazgos reales del código que conviene tratar por separado, no corregir dentro de este bootstrap documental.
+
+## Revisión 2026-11-19 — commit `cff723be`
+
+Se releyó el commit “Corrige facturación de menores, montos y control médico” y se actualizaron los contratos afectados. Los siete cambios declarados se verificaron en código estático:
+
+| Cambio declarado | Verificación | Evidencia |
+|---|---|---|
+| Factura de menores a nombre de un representante adulto usando `cliente` | Confirmado. El cliente debe ser adulto; un paciente menor no puede facturarse contra su propia cédula. | `src/modelos/ModeloFactura.php:validarFacturaMenorEdad`, `guardarCliente`; `src/assets/js/f.js` (`esMenorPaciente`, `clienteEsAdulto`) |
+| Cédula de menor con sufijo `-R` a partir de la del representante | Confirmado. Genera `representante-R1`…`-R99` y busca el primer sufijo libre en `paciente`. | `src/modelos/ModeloPacientes.php:generarCedulaMenor`; regex en `ModeloPacientes`, `ModeloFactura`, `ModeloCita`, `ModeloControl`, `ModeloHospitalizacion`, `ModeloPatologia` |
+| Corrige doble conteo de servicios e insumos en cita y hospitalización | Confirmado en frontend. La cita ya no envía el precio del servicio como base; la hospitalización envía solo `total_MoEx` y no reinserta sus insumos. | `src/vistas/vistaFactura/facturaCita.php` (`inputTotalCita=0`), `facturaHospitalizacion.php` (`total_MoEx`), `src/assets/js/f.js` (sin bucle de insumos de hospitalización) |
+| Permite signos de puntuación básicos en control y hospitalización | Confirmado. Se ampliaron las expresiones de `diagnostico`, `historial` e `indicaciones` en backend y frontend. | `src/modelos/ModeloControl.php`, `src/modelos/ModeloHospitalizacion.php`, `src/assets/js/generic/expresionesModulares.js` |
+| Valida la fecha de regreso contra el horario del doctor de la última cita | Confirmado. Backend obtiene doctor/horario y rechaza el día; frontend muestra los días y valida antes de guardar. | `ModeloControl::validarFechaRegresoDoctor`, `ControllerControl::horarioUltimaCitaPaciente`, `src/assets/js/ajax/control.js`, `doctorSchedule.js` |
+| Limpia el buscador de doctores al abrir el modal de control | Confirmado. Se vacía `buscarDoctores`, se limpia `divDoctores` y se oculta el footer. | `src/assets/js/ajax/control.js` (`btnControl` handler) |
+| Agrega ayudas visuales y muestra los datos del pagador en facturación | Confirmado. Se agregaron `avisoFacturaMenor`, `datosPagoConfirmacion`, títulos de total no editable, `diasRegresoAyuda` y el botón de cédula de menor. | `src/vistas/vistaFactura/modalAgregarFactura.php`, vistas de factura, `modalAgregarControl.php`, `modalAgregarPaciente.php`, `modalesCitas-Control.php` |
+
+**Observación funcional:** `ModeloControl::validarFechaRegresoDoctor` y `horarioUltimaCitaPaciente` toman la última fila de `cita` por `fecha`/`id_cita`, sin filtrar `estado`. Si la última cita fue cancelada, expirada o reservada, el horario consultado puede ser el de un doctor distinto al de la atención real. Conviene decidir si esas citas deben excluirse (`Realizadas`/`Pendiente`) o si la regla debe basarse en el doctor del control.
+
+**Resultado de esta revisión:** 7 cambios verificados; 0 contradicciones nuevas entre contratos y código; contratos actualizados en `EGM.md`, `src/modelos/EGM.md`, `src/controllers/EGM.md`, `src/config/EGM.md`, `src/vistas/EGM.md` y `src/assets/js/EGM.md`.
+
+**Observación de método:** la verificación sigue siendo estática. No se ejecutaron flujos reales de facturación de menores, doble conteo, fecha de regreso ni el modal de control; eso requiere base de pruebas y navegador.
