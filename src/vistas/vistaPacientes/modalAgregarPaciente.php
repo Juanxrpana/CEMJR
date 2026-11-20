@@ -46,11 +46,11 @@
                     </svg>
                   </span>
                 </div>
-
-                <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="btnCedulaMenor">
+               <!--  ESTO LO REVISAMO MEJOR DESPUES -->
+               <!--  <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="btnCedulaMenor">
                   Generar cédula de menor (representante)
                 </button>
-
+ -->
                 <p class="error-msg d-none"></p>
               </div>
 
