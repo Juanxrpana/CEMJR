@@ -144,10 +144,9 @@ class ModeloServicios extends ModelBase
         }
     }
 
-    public function nombreServicio()
+    public function nombreServicio($editar = false)
     {
         try {
-
             $data = [
                 'id_categoria' => $this->getIdCategoria(),
                 'tipo' => $this->getTipo(),
@@ -155,6 +154,12 @@ class ModeloServicios extends ModelBase
             ];
 
             $sql = "SELECT sm.id_servicioMedico,sm.id_categoria,sm.precio,sm.tipo,cs.nombre as categoria  FROM serviciomedico sm INNER JOIN categoria_servicio cs ON cs.id_categoria = sm.id_categoria WHERE cs.id_categoria = :id_categoria AND sm.estado =:estado AND sm.tipo = :tipo";
+
+            if ($editar) {
+                $sql .= " AND sm.id_servicioMedico != :id_servicioMedico";
+                $data['id_servicioMedico'] = $this->getIdServicioMedico();
+            }
+
             $this->setSQL($sql);
             $listData = $this->search($data, false);
             return !empty($listData) ? 1 : 0;
@@ -350,7 +355,7 @@ class ModeloServicios extends ModelBase
             if ($validar == []) {
                 throw new \Exception("El id del servicio no existe");
             }
-            if ($this->nombreServicio()) {
+            if ($this->nombreServicio(true)) {
                 throw new \Exception("El tipo de servicio, ya existe");
             }
 

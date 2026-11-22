@@ -369,7 +369,7 @@ comprobar(
     'guarda por el endpoint del modulo de Clientes'
 );
 comprobar(
-    preg_match('/createCliente[\s\S]{0,900}?buscarCliente\(form\)/', $facturaJs) === 1,
+    preg_match('/createCliente[\s\S]{0,900}?buscarCliente\(buscador\)/', $facturaJs) === 1,
     'tras registrar, vuelve a buscar para obtener el id_cliente'
 );
 comprobar(
@@ -385,8 +385,17 @@ comprobar(
 );
 // El boton "Siguiente" del modal debe mostrarse al encontrar/registrar cliente.
 comprobar(
-    preg_match('/if \(botonPC\) botonPC\.classList\.toggle\("d-none", edad < 18\);/', $facturaJs) === 1,
+    preg_match('/botonPC\?\.classList\.toggle\("d-none", !puedeContinuar\)/', $facturaJs) === 1,
     'al encontrar cliente se quita el d-none del boton Siguiente'
+);
+// La regla de menores debe cubrir a los bebés (0 años) y las fechas inválidas.
+comprobar(
+    preg_match('/esMenorPaciente = !Number\.isFinite\(edadNum\) \|\| edadNum < 18;/', $facturaJs) === 1,
+    'la interfaz trata como menor a un bebé y a una fecha inválida'
+);
+comprobar(
+    strpos($facturaJs, 'const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto);') !== false,
+    'la interfaz valida estrictamente fechas YYYY-MM-DD'
 );
 
 echo "\n=== Formato de moneda (guía de flujo de pago) ===\n";

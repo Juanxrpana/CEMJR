@@ -232,9 +232,7 @@ addEventListener("DOMContentLoaded", async function () {
   const totalFacturaDivisa = byId("totalFacturaDivisa");
   const totalDeConfirmacion = byId("totalDeConfirmacion");
   const inputTotalDeConfirmacion = byId("inputTotalDeConfirmacion");
-  // OJO: antes era document.getAnimations(...) que devuelve un array de
-  // Animation; escribir .innerText sobre él no pintaba nada (fallo silencioso).
-  // El total del modal de validación lo pinta refrescarResumenesPago().
+
   const inputPaciente = byId("inputPaciente");
   const inputHospitalizacion = byId("inputHospitalizacion");
   const inputCliente = byId("inputCliente");
@@ -301,17 +299,38 @@ addEventListener("DOMContentLoaded", async function () {
     void clase;
   };
 
-  /** Calcula la edad en años a partir de una fecha de nacimiento. */
+  /**
+   * Calcula la edad en años a partir de una fecha de nacimiento.
+   * Devuelve -1 si la fecha no es válida; un bebé de meses devuelve 0.
+   */
   const calcularEdad = (fechaNacimiento) => {
-    if (!fechaNacimiento) return 0;
-    const nac = new Date(fechaNacimiento);
-    if (Number.isNaN(nac.getTime())) return 0;
+    if (!fechaNacimiento) return -1;
+    const texto = String(fechaNacimiento).trim();
+    const coincidencia = /^(\d{4})-(\d{2})-(\d{2})$/.exec(texto);
+    if (!coincidencia) return -1;
+
+    const anio = Number(coincidencia[1]);
+    const mesNacimiento = Number(coincidencia[2]) - 1;
+    const dia = Number(coincidencia[3]);
+    const nac = new Date(anio, mesNacimiento, dia);
     const hoy = new Date();
+    if (
+      Number.isNaN(nac.getTime()) ||
+      nac.getFullYear() !== anio ||
+      nac.getMonth() !== mesNacimiento ||
+      nac.getDate() !== dia
+    ) return -1;
+    if (nac > hoy) return -1;
+
     let edad = hoy.getFullYear() - nac.getFullYear();
-    const mes = hoy.getMonth() - nac.getMonth();
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nac.getDate())) edad--;
+    const diferenciaMes = hoy.getMonth() - nac.getMonth();
+    if (diferenciaMes < 0 || (diferenciaMes === 0 && hoy.getDate() < nac.getDate())) edad--;
     return Math.max(0, edad);
   };
+
+  /** Texto de edad para la pantalla; distingue la fecha inválida. */
+  const textoEdad = (edad) =>
+    Number(edad) < 0 ? "sin fecha de nacimiento" : `${Number(edad)} años`;
 
   /**
    * Cédula base del representante. La cédula de un menor se guarda como
@@ -348,7 +367,7 @@ addEventListener("DOMContentLoaded", async function () {
 
     if (esMenorPaciente && !clienteValido) {
       mostrarAvisoMenor(
-        "Paciente menor de edad: la factura debe emitirse a nombre de un representante adulto. Busque o registre al representante como cliente.",
+        "Paciente menor de edad o sin fecha de nacimiento válida: la factura debe emitirse a nombre de un representante adulto. Busque o registre al representante como cliente.",
       );
     } else if (esMenorPaciente) {
       mostrarAvisoMenor(
@@ -361,7 +380,10 @@ addEventListener("DOMContentLoaded", async function () {
 
   /** Aplica la regla de edad al paciente recién cargado. */
   const aplicarReglaPaciente = (edad) => {
-    esMenorPaciente = Number(edad) > 0 && Number(edad) < 18;
+    // 0 años también es menor (bebés). -1 significa fecha inválida y se trata
+    // como menor para no facturar sin representante por falta de dato.
+    const edadNum = Number(edad);
+    esMenorPaciente = !Number.isFinite(edadNum) || edadNum < 18;
     clienteSeleccionado = false;
     clienteEsAdulto = false;
     if (inputCliente) inputCliente.value = "";
@@ -421,13 +443,13 @@ addEventListener("DOMContentLoaded", async function () {
         const cedula = [res.nacionalidad, res.cedula].filter(Boolean).join("-");
         const datosCliente =
           `CLIENTE: ${res.nombre} ${res.apellido} | C.I: ${cedula} | ` +
-          `Tel: ${res.telefono ?? ""} | ${res.direccion ?? ""} | Edad: ${edad}`;
+          `Tel: ${res.telefono ?? ""} | ${res.direccion ?? ""} | Edad: ${textoEdad(edad)}`;
 
         // Se muestra dentro del modal de "otra persona", no en la pantalla principal.
         if (dataClienteModal) {
           dataClienteModal.innerText = clienteAdulto
             ? datosCliente
-            : "El cliente seleccionado es menor de edad. La factura debe emitirse a nombre de un adulto.";
+            : "El cliente seleccionado es menor de edad o no tiene una fecha de nacimiento válida. La factura debe emitirse a nombre de un adulto.";
         }
 
         clienteSeleccionado = clienteAdulto;
@@ -485,7 +507,7 @@ addEventListener("DOMContentLoaded", async function () {
         const edad = calcularEdad(res.fn);
 
         limpiarFactura();
-        dataCliente.innerText = `PACIENTE: ${res.nombre} ${res.apellido} Edad: ${edad}`;
+        dataCliente.innerText = `PACIENTE: ${res.nombre} ${res.apellido} Edad: ${textoEdad(edad)}`;
         if (inputPaciente) inputPaciente.value = res.id_paciente;
         if (inputCliente) inputCliente.value = "";
 
@@ -573,12 +595,16 @@ addEventListener("DOMContentLoaded", async function () {
         form.reset();
 
         if (cedulaGuardada) {
+
           const buscador = byId("form-buscador-otro-cliente");
           if (buscador) {
             const input = buscador.querySelector('[name="cedula"]');
-            if (input) input.value = cedulaGuardada;
+            if (input) {
+              input.value = cedulaGuardada;
+              input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+            await buscarCliente(buscador);
           }
-          await buscarCliente(form);
         }
 
         alertSuccess(result.message ?? "Cliente registrado correctamente.");
@@ -632,7 +658,7 @@ addEventListener("DOMContentLoaded", async function () {
 
         // 2. Actualizar datos del paciente
         const edad = calcularEdad(cita.fecha_de_nacimiento);
-        dataCliente.innerText = `PACIENTE: ${cita.nombre_p} ${cita.apellido_p} Edad: ${edad} años`;
+        dataCliente.innerText = `PACIENTE: ${cita.nombre_p} ${cita.apellido_p} Edad: ${textoEdad(edad)}`;
         if (inputPaciente) inputPaciente.value = cita.id_paciente;
         aplicarReglaPaciente(edad);
         const prefillRepresentante = precargarCedulaRepresentante(cita.cedula_p);
@@ -689,7 +715,7 @@ addEventListener("DOMContentLoaded", async function () {
 
       // 1. Actualizar datos del paciente
       const edad = calcularEdad(hospit.fecha_de_nacimiento);
-      dataCliente.innerText = `PACIENTE: ${hospit.nombre_p} ${hospit.apellido_p} Edad: ${edad} años`;
+      dataCliente.innerText = `PACIENTE: ${hospit.nombre_p} ${hospit.apellido_p} Edad: ${textoEdad(edad)}`;
       if (inputPaciente) inputPaciente.value = hospit.id_paciente;
 
       // 2. Limpiar datos previos (incluye cliente y base anteriores)
@@ -2146,14 +2172,24 @@ addEventListener("DOMContentLoaded", async function () {
   }
 
   // ── Envío de la factura ──────────────────────────────────────────────
-  // El backend responde JSON cuando algo falla (total descuadrado, stock
-  // insuficiente, error de validación). Antes el formulario se enviaba a ciegas
-  // y el navegador seguía la redirección sin enterarse del fallo.
+
   const formConfirmar = byId("formConfirmarFactura");
 
   if (formConfirmar) {
     formConfirmar.addEventListener("submit", async function (e) {
       e.preventDefault();
+
+
+      if (
+        esMenorPaciente &&
+        (!clienteSeleccionado || !clienteEsAdulto || !inputCliente?.value)
+      ) {
+        alertError(
+          "Paciente menor de edad",
+          "La factura debe emitirse a nombre de un representante adulto. Seleccione o registre al representante antes de confirmar.",
+        );
+        return;
+      }
 
       const btn = byId("btnConfirmarFactura");
       if (btn) btn.disabled = true;

@@ -198,9 +198,8 @@ class ModeloFactura extends ModelBase
                     JOIN bd.personal_has_serviciomedico psm ON psm.serviciomedico_id_servicioMedico = sm.id_servicioMedico
                     JOIN bd.personal d    ON psm.personal_id_personal = d.id_personal
                     JOIN segurity.usuario u ON u.id_usuario = d.usuario
-                    WHERE sm.estado = 'ACT'
-                        AND cs.nombre != 'Consulta'
-                        AND tipo != 'Cita'";
+                    WHERE sm.estado = 'ACT'";
+
 			$this->setSQL($sql);
 			return $this->read();
 		} catch (\Exception $e) {
@@ -880,10 +879,7 @@ class ModeloFactura extends ModelBase
 
 	// ── PÚBLICO──────────────────────────────────────
 
-	/**
-	 * Edad en años cumplidos a partir de una fecha YYYY-MM-DD.
-	 * Devuelve -1 si la fecha no es válida.
-	 */
+
 	private function edadDesdeFecha($fecha): int
 	{
 		$fecha = trim((string)$fecha);
@@ -893,48 +889,64 @@ class ModeloFactura extends ModelBase
 		}
 
 		$hoy = new \DateTime('today');
+		if ($nacimiento > $hoy) {
+			return -1;
+		}
 		return (int)$nacimiento->diff($hoy)->y;
 	}
 
-	/**
-	 * Un menor de edad no puede ser el cliente/responsable de la factura.
-	 * Se exige un cliente adulto y distinto del paciente (representante).
-	 */
+
 	private function validarFacturaMenorEdad(): void
 	{
-		if (!$this->getIdPaciente() || !$this->getIdCliente()) {
+		if (!$this->getIdPaciente()) {
 			return;
 		}
 
 		$this->setSQL(
-			"SELECT p.fn AS paciente_fn, p.cedula AS paciente_cedula,
-			        c.fn AS cliente_fn, c.cedula AS cliente_cedula
-			 FROM paciente p
-			 INNER JOIN cliente c ON c.id_cliente = :id_cliente
-			 WHERE p.id_paciente = :id_paciente"
+			"SELECT fn AS paciente_fn, cedula AS paciente_cedula
+			 FROM paciente
+			 WHERE id_paciente = :id_paciente"
 		);
-		$datos = $this->search([
-			'id_cliente' => $this->getIdCliente(),
-			'id_paciente' => $this->getIdPaciente(),
-		], false);
+		$paciente = $this->search(['id_paciente' => $this->getIdPaciente()], false);
 
-		if (empty($datos)) {
-			throw new \DomainException("No se pudo validar el paciente y el cliente de la factura.");
+		if (empty($paciente)) {
+			throw new \DomainException("No se pudo validar el paciente de la factura.");
 		}
 
-		$edadCliente = $this->edadDesdeFecha($datos['cliente_fn'] ?? '');
-		if ($edadCliente >= 0 && $edadCliente < 18) {
-			throw new \DomainException("El cliente que paga debe ser un adulto. Seleccione o registre a un representante adulto.");
-		}
+		$cedulaPaciente = trim((string)($paciente['paciente_cedula'] ?? ''));
+		$edadPaciente   = $this->edadDesdeFecha($paciente['paciente_fn'] ?? '');
 
-		$edadPaciente = $this->edadDesdeFecha($datos['paciente_fn'] ?? '');
-		if ($edadPaciente < 0 || $edadPaciente >= 18) {
+		// edadDesdeFecha() devuelve -1 si la fecha no es válida. También se
+		// trata como menor: sin fecha no se puede demostrar que sea adulto.
+		$esMenor = $edadPaciente < 18
+			|| preg_match('/-R[0-9]{1,2}$/i', $cedulaPaciente) === 1;
+
+		if (!$this->getIdCliente()) {
+			if ($esMenor) {
+				throw new \DomainException("El paciente es menor de edad; la factura debe emitirse a nombre de un representante adulto.");
+			}
 			return;
 		}
 
-		$cedulaPaciente = trim((string)($datos['paciente_cedula'] ?? ''));
-		$cedulaCliente = trim((string)($datos['cliente_cedula'] ?? ''));
-		if ($cedulaCliente !== '' && $cedulaCliente === $cedulaPaciente) {
+		// El cliente que paga siempre debe ser adulto, sea o no el paciente.
+		$this->setSQL("SELECT fn, cedula FROM cliente WHERE id_cliente = :id_cliente");
+		$cliente = $this->search(['id_cliente' => $this->getIdCliente()], false);
+
+		if (empty($cliente)) {
+			throw new \DomainException("No se pudo validar el cliente de la factura.");
+		}
+
+		$edadCliente = $this->edadDesdeFecha($cliente['fn'] ?? '');
+		if ($edadCliente < 18) {
+			throw new \DomainException("El cliente que paga debe ser un adulto. Seleccione o registre a un representante adulto.");
+		}
+
+		if (!$esMenor) {
+			return;
+		}
+
+		$cedulaCliente = trim((string)($cliente['cedula'] ?? ''));
+		if ($cedulaCliente === '' || $cedulaCliente === $cedulaPaciente) {
 			throw new \DomainException("El paciente es menor de edad; la factura debe emitirse a nombre de un representante adulto, no del paciente.");
 		}
 	}
@@ -947,9 +959,11 @@ class ModeloFactura extends ModelBase
 			$dataPaciente = $this->search($data, false);
 
 			// Un menor no puede convertirse en cliente/responsable de la factura.
+			// Si la fecha no es válida tampoco se crea el cliente: sin fecha no
+			// se puede demostrar que sea adulto.
 			$edadPaciente = $this->edadDesdeFecha($dataPaciente['fn'] ?? '');
-			if ($edadPaciente >= 0 && $edadPaciente < 18) {
-				throw new \DomainException("El paciente es menor de edad; seleccione o registre al representante como cliente antes de facturar.");
+			if ($edadPaciente < 18) {
+				throw new \DomainException("El paciente es menor de edad o no tiene una fecha de nacimiento válida; seleccione o registre al representante como cliente antes de facturar.");
 			}
 
 			$modeloCliente = new ModeloCliente();
