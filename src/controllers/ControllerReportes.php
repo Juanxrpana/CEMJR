@@ -17,6 +17,12 @@ function reportes($parametro)
 	$vistaActiva = "reportes";
 	$ayuda = "btnayudaReporte";
 	$insumos = $modeloInsumo->insumos();
+
+	$doctores = $modeloReporte->listarDoctoresFacturacion();
+	if (!is_array($doctores)) {
+		$doctores = [];
+	}
+
 	require_once './src/vistas/vistaReportes/vistaReportes.php';
 }
 
@@ -194,6 +200,98 @@ function reportesFactura()
 function reportesFacturasAnuladas()
 {
 	require_once './src/vistas/vistaReportes/vistaReporteFacturaAnuladas.php';
+}
+
+function reporteGlobalFacturaPDF()
+{
+	if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+		http_response_code(405);
+		header('Content-Type: text/plain; charset=utf-8');
+		echo 'Método no permitido.';
+		exit;
+	}
+
+	$fechaInicio = trim((string)($_POST['desdeFechaGlobal'] ?? ''));
+	$fechaFinal = trim((string)($_POST['fechaHastaGlobal'] ?? ''));
+	$idDoctorRaw = trim((string)($_POST['id_doctor_global'] ?? 'todos'));
+	$estado = (string)($_POST['estado_global'] ?? 'todas');
+
+	$fechaValida = static function ($fecha) {
+		if ($fecha === '') {
+			return true;
+		}
+		$dt = \DateTime::createFromFormat('Y-m-d', $fecha);
+		return $dt && $dt->format('Y-m-d') === $fecha;
+	};
+
+	if (
+		!$fechaValida($fechaInicio) ||
+		!$fechaValida($fechaFinal) ||
+		($fechaInicio !== '' && $fechaFinal !== '' && $fechaInicio > $fechaFinal)
+	) {
+		http_response_code(400);
+		header('Content-Type: text/plain; charset=utf-8');
+		echo 'El rango de fechas no es válido.';
+		exit;
+	}
+
+	$idDoctor = null;
+	if ($idDoctorRaw !== '' && $idDoctorRaw !== 'todos') {
+		if (!preg_match('/^[0-9]+$/', $idDoctorRaw) || (int)$idDoctorRaw <= 0) {
+			http_response_code(400);
+			header('Content-Type: text/plain; charset=utf-8');
+			echo 'El doctor seleccionado no es válido.';
+			exit;
+		}
+		$idDoctor = (int)$idDoctorRaw;
+	}
+
+	if (!in_array($estado, ['todas', 'ACT', 'Anulada'], true)) {
+		$estado = 'todas';
+	}
+
+	if ($fechaInicio !== '' && $fechaFinal !== '') {
+		$periodo = $fechaInicio . ' AL ' . $fechaFinal;
+	} elseif ($fechaInicio !== '') {
+		$periodo = 'DESDE ' . $fechaInicio;
+	} elseif ($fechaFinal !== '') {
+		$periodo = 'HASTA ' . $fechaFinal;
+	} else {
+		$periodo = 'TODAS LAS FECHAS';
+	}
+
+	$etiquetasEstado = [
+		'todas' => 'TODAS (ACTIVAS Y ANULADAS)',
+		'ACT' => 'ACTIVAS',
+		'Anulada' => 'ANULADAS',
+	];
+	$estadoFiltro = $etiquetasEstado[$estado];
+
+	$modeloReporte = new ModeloReporte();
+	$facturas = $modeloReporte->consultarReporteGlobalFacturas($fechaInicio, $fechaFinal, $idDoctor, $estado);
+	$servicios = $modeloReporte->resumenServiciosReporteGlobal($fechaInicio, $fechaFinal, $idDoctor, $estado);
+
+	if (!is_array($facturas) || !is_array($servicios)) {
+		http_response_code(500);
+		header('Content-Type: text/plain; charset=utf-8');
+		echo 'No se pudo generar el reporte global de facturación.';
+		exit;
+	}
+
+	$doctorFiltro = 'TODOS LOS DOCTORES';
+	if ($idDoctor !== null) {
+		$doctores = $modeloReporte->listarDoctoresFacturacion();
+		if (is_array($doctores)) {
+			foreach ($doctores as $doctor) {
+				if ((int)$doctor['id_personal'] === $idDoctor) {
+					$doctorFiltro = trim($doctor['nombre'] . ' ' . $doctor['apellido']);
+					break;
+				}
+			}
+		}
+	}
+
+	require_once './src/vistas/vistaReportes/vistaReporteGlobalFacturaPDF.php';
 }
 
 function buscarPago($datos)

@@ -281,6 +281,7 @@ return [
     "insumosPDF" => "consultar",
     "reportesFactura" => "consultar",
     "reportesFacturasAnuladas" => "consultar",
+    "reporteGlobalFacturaPDF" => "consultar",
     "buscarPago" => "consultar",
     "buscarMasServicios" => "consultar",
     "buscarInsumos" => "consultar",

@@ -81,6 +81,115 @@ class ModeloReporte extends ModelBase
 			return $e->getMessage();
 		}
 	}
+	public function listarDoctoresFacturacion()
+	{
+		try {
+			$sql = "SELECT DISTINCT p.id_personal, p.nombre, p.apellido
+					FROM detalle_factura df
+					INNER JOIN personal p ON p.id_personal = df.personal_id_personal
+					WHERE df.personal_id_personal IS NOT NULL
+					ORDER BY p.nombre ASC, p.apellido ASC";
+			$this->setSQL($sql);
+			return $this->read();
+		} catch (\Exception $e) {
+			error_log('Error al listar los doctores de facturación: ' . $e->getMessage());
+			return [];
+		}
+	}
+
+	public function consultarReporteGlobalFacturas($fechaInicio = '', $fechaFinal = '', $idDoctor = null, $estado = 'todas')
+	{
+		try {
+			$sql = "SELECT f.id_factura, f.fecha, f.total, f.estado, f.id_cliente,
+						c.nacionalidad, c.cedula AS cedula_p,
+						c.nombre AS nombre_p, c.apellido AS apellido_p,
+						d.doctor
+					FROM factura f
+					INNER JOIN cliente c ON c.id_cliente = f.id_cliente
+					LEFT JOIN (
+						SELECT df.id_factura,
+							GROUP_CONCAT(DISTINCT CONCAT(p.nombre, ' ', p.apellido)
+								ORDER BY CONCAT(p.nombre, ' ', p.apellido) SEPARATOR ', ') AS doctor
+						FROM detalle_factura df
+						INNER JOIN personal p ON p.id_personal = df.personal_id_personal
+						WHERE df.personal_id_personal IS NOT NULL
+						GROUP BY df.id_factura
+					) d ON d.id_factura = f.id_factura
+					WHERE 1=1";
+
+			$data = [];
+
+			if ($fechaInicio !== '') {
+				$sql .= " AND f.fecha >= :fechaInicio";
+				$data['fechaInicio'] = $fechaInicio;
+			}
+			if ($fechaFinal !== '') {
+				$sql .= " AND f.fecha <= :fechaFinal";
+				$data['fechaFinal'] = $fechaFinal;
+			}
+			if ($idDoctor !== null) {
+				$sql .= " AND EXISTS (
+							SELECT 1
+							FROM detalle_factura df_doctor
+							WHERE df_doctor.id_factura = f.id_factura
+								AND df_doctor.personal_id_personal = :idDoctor
+						)";
+				$data['idDoctor'] = (int)$idDoctor;
+			}
+			if ($estado === 'ACT' || $estado === 'Anulada') {
+				$sql .= " AND f.estado = :estado";
+				$data['estado'] = $estado;
+			}
+
+			$sql .= " ORDER BY f.fecha ASC, f.id_factura ASC";
+			$this->setSQL($sql);
+			return $this->search($data);
+		} catch (\Exception $e) {
+			error_log('Error al consultar el reporte global de facturas: ' . $e->getMessage());
+			return [];
+		}
+	}
+
+	public function resumenServiciosReporteGlobal($fechaInicio = '', $fechaFinal = '', $idDoctor = null, $estado = 'todas')
+	{
+		try {
+			$sql = "SELECT cs.nombre AS servicio,
+						COUNT(*) AS veces,
+						SUM(df.subtotal) AS monto
+					FROM detalle_factura df
+					INNER JOIN factura f ON f.id_factura = df.id_factura
+					INNER JOIN serviciomedico sm ON sm.id_servicioMedico = df.serviciomedico_id_servicioMedico
+					INNER JOIN categoria_servicio cs ON cs.id_categoria = sm.id_categoria
+					WHERE df.tipo = 'Servicio'";
+
+			$data = [];
+
+			if ($fechaInicio !== '') {
+				$sql .= " AND f.fecha >= :fechaInicio";
+				$data['fechaInicio'] = $fechaInicio;
+			}
+			if ($fechaFinal !== '') {
+				$sql .= " AND f.fecha <= :fechaFinal";
+				$data['fechaFinal'] = $fechaFinal;
+			}
+			if ($idDoctor !== null) {
+				$sql .= " AND df.personal_id_personal = :idDoctor";
+				$data['idDoctor'] = (int)$idDoctor;
+			}
+			if ($estado === 'ACT' || $estado === 'Anulada') {
+				$sql .= " AND f.estado = :estado";
+				$data['estado'] = $estado;
+			}
+
+			$sql .= " GROUP BY cs.id_categoria, cs.nombre ORDER BY monto DESC, cs.nombre ASC";
+			$this->setSQL($sql);
+			return $this->search($data);
+		} catch (\Exception $e) {
+			error_log('Error al consultar el resumen de servicios del reporte global: ' . $e->getMessage());
+			return [];
+		}
+	}
+
 	public function consultarFacturaAnuladas()
 	{
 		try {

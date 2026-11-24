@@ -113,6 +113,23 @@
                     </a>
                 </div>
             </div>
+
+            <div class="card cardReporteFactura reporte-facturas-global tajeta-estadistica-m mb-5 contenido">
+                <h3 class="card-header ">Reporte Global</h3>
+                <div class="card-body ">
+                    <a href="#" id="cardReporteGlobalFactura" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#reporteGlobalFactura">
+                        <div class="card-body cartaRepor d-flex justify-content-center align-items-center  h-100 ">
+                            <div class="ico  d-flex icono-card-reporte flex-column align-items-center w-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-bar-chart-fill mb-2 t icon-reporte" viewBox="0 0 16 16">
+                                    <path d="M1 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3zm5-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2z" />
+                                </svg>
+                                <h5 class="statistic">Descargar Reporte Global de Facturación</h5>
+                            </div>
+
+                        </div>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 

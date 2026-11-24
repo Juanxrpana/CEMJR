@@ -362,6 +362,26 @@ addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Reporte global de facturación: valida únicamente que el rango de fechas
+  // tenga sentido. Si no se indican fechas se reportan todas las facturas.
+  const formularioReporteGlobal = document.getElementById(
+    "formularioReporteGlobal",
+  );
+  if (formularioReporteGlobal) {
+    formularioReporteGlobal.addEventListener("submit", function (e) {
+      const desde = document.getElementById("desdeFechaGlobal")?.value ?? "";
+      const hasta = document.getElementById("fechaHastaGlobal")?.value ?? "";
+
+      if (desde !== "" && hasta !== "" && desde > hasta) {
+        e.preventDefault();
+        alertError(
+          "Error",
+          "La fecha de inicio no puede ser mayor a la fecha final.",
+        );
+      }
+    });
+  }
+
   formularioCita.addEventListener("submit", function (e) {
     e.preventDefault();
     let esValido = verificarFormCitas();

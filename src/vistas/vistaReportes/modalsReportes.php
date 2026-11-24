@@ -362,3 +362,104 @@
     </div>
 </div>
 </div>
+
+<!-- Modal Reporte Global de Facturación -->
+<div class="modal fade modalBuscadorP" id="reporteGlobalFactura" tabindex="-1" aria-labelledby="reporteGlobalFacturaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content modalBuscador tamaño-modal">
+
+            <div class="modal-header">
+                <h5 class="modal-title fs-4 fw-bold" id="reporteGlobalFacturaLabel">Reporte Global de Facturación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <?php $doctores = $doctores ?? []; ?>
+                <form action="/Reportes/reporteGlobalFacturaPDF" method="POST" id="formularioReporteGlobal">
+
+                    <div class="d-flex justify-content-between flex-wrap align-items-center">
+                        <div style="width:210px">
+                            <label class="label-custom">Fecha de Inicio</label>
+                            <div class="campo-custom">
+                                <div class="input-custom">
+                                    <span class="icono-izq">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar2-date-fill azul" viewBox="0 0 16 16">
+                                            <path d="M9.402 10.246c.625 0 1.184-.484 1.184-1.18 0-.832-.527-1.23-1.16-1.23-.586 0-1.168.387-1.168 1.21 0 .817.543 1.2 1.144 1.2z" />
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zm9.954 3H2.545c-.3 0-.545.224-.545.5v1c0 .276.244.5.545.5h10.91c.3 0 .545-.224.545-.5v-1c0-.276-.244-.5-.546-.5zm-4.118 9.79c1.258 0 2-1.067 2-2.872 0-1.934-.781-2.668-1.953-2.668-.926 0-1.797.672-1.797 1.809 0 1.16.824 1.77 1.676 1.77.746 0 1.23-.376 1.383-.79h.027c-.004 1.316-.461 2.164-1.305 2.164-.664 0-1.008-.45-1.05-.82h-.684c.047.64.594 1.406 1.703 1.406zm-2.89-5.435h-.633A12.6 12.6 0 0 0 4.5 8.16v.695c.375-.257.969-.62 1.258-.777h.012v4.61h.675V7.354z" />
+                                        </svg>
+                                    </span>
+                                    <input class="form-control txt-custom" type="date" name="desdeFechaGlobal" id="desdeFechaGlobal" max="<?= date('Y-m-d') ?>">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="width:210px">
+                            <label class="label-custom">Fecha Final</label>
+                            <div class="campo-custom">
+                                <div class="input-custom">
+                                    <span class="icono-izq">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-calendar2-date-fill azul" viewBox="0 0 16 16">
+                                            <path d="M9.402 10.246c.625 0 1.184-.484 1.184-1.18 0-.832-.527-1.23-1.16-1.23-.586 0-1.168.387-1.168 1.21 0 .817.543 1.2 1.144 1.2z" />
+                                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zm9.954 3H2.545c-.3 0-.545.224-.545.5v1c0 .276.244.5.545.5h10.91c.3 0 .545-.224.545-.5v-1c0-.276-.244-.5-.546-.5zm-4.118 9.79c1.258 0 2-1.067 2-2.872 0-1.934-.781-2.668-1.953-2.668-.926 0-1.797.672-1.797 1.809 0 1.16.824 1.77 1.676 1.77.746 0 1.23-.376 1.383-.79h.027c-.004 1.316-.461 2.164-1.305 2.164-.664 0-1.008-.45-1.05-.82h-.684c.047.64.594 1.406 1.703 1.406zm-2.89-5.435h-.633A12.6 12.6 0 0 0 4.5 8.16v.695c.375-.257.969-.62 1.258-.777h.012v4.61h.675V7.354z" />
+                                        </svg>
+                                    </span>
+                                    <input class="form-control txt-custom" type="date" name="fechaHastaGlobal" id="fechaHastaGlobal" max="<?= date('Y-m-d') ?>">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-100 mt-3">
+                        <label class="label-custom">Doctor</label>
+                        <div class="campo-custom">
+                            <div class="input-custom">
+                                <span class="icono-izq">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-person-fill azul" viewBox="0 0 16 16">
+                                        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                                    </svg>
+                                </span>
+                                <select id="id_doctor_global" name="id_doctor_global" class="form-control txt-custom select-custom">
+                                    <option value="todos" selected>Todos los doctores</option>
+                                    <?php foreach ($doctores as $doctor): ?>
+                                        <option class="option-select-background" value="<?= (int)$doctor['id_personal'] ?>">
+                                            <?= htmlspecialchars(trim($doctor['nombre'] . ' ' . $doctor['apellido']), ENT_QUOTES, 'UTF-8') ?>
+                                        </option>
+                                    <?php endforeach ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="w-100 mt-3">
+                        <label class="label-custom">Estado</label>
+                        <div class="campo-custom">
+                            <div class="input-custom">
+                                <span class="icono-izq">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check2-square azul" viewBox="0 0 16 16">
+                                        <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5H3z" />
+                                        <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z" />
+                                    </svg>
+                                </span>
+                                <select id="estado_global" name="estado_global" class="form-control txt-custom select-custom">
+                                    <option value="todas" selected>Todas (activas y anuladas)</option>
+                                    <option class="option-select-background" value="ACT">Solo activas</option>
+                                    <option class="option-select-background" value="Anulada">Solo anuladas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="d-flex justify-content-end align-items-center">
+                <button class="btn btn-modals-cancelar me-2" data-bs-dismiss="modal" type="button">Cancelar</button>
+                <button type="submit" form="formularioReporteGlobal" class="btn btn-modals">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+                        <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1" />
+                        <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1" />
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
