@@ -68,6 +68,8 @@ function preguntar()
 	$payload = json_encode([
 		'consulta'   => $consulta,
 		'session_id' => $sessionId,
+		// Clave de idempotencia del turno: un reintento no crea dos casos.
+		'peticion_id' => uuidV4(),
 	], JSON_UNESCAPED_UNICODE);
 
 	// Los headers X-Usuario-* permiten al componente saber quién consulta.
@@ -75,7 +77,7 @@ function preguntar()
 		'Content-Type: application/json',
 		'X-API-Key: ' . $apiKey,
 		'X-Usuario-Id: ' . ($_SESSION['id_usuario'] ?? ''),
-		'X-Usuario-Rol: ' . ($_SESSION['rol'] ?? ''),
+		'X-Usuario-Rol: ' . ($_SESSION['id_rol'] ?? ''),
 		'X-Usuario-Nombre: ' . trim(($_SESSION['nombre'] ?? '') . ' ' . ($_SESSION['apellido'] ?? '')),
 	];
 
@@ -103,6 +105,14 @@ function preguntar()
 }
 
 //envía la consulta al componente FastAPI y devuelve su respuesta.
+function uuidV4(): string
+{
+	$datos = random_bytes(16);
+	$datos[6] = chr((ord($datos[6]) & 0x0f) | 0x40);
+	$datos[8] = chr((ord($datos[8]) & 0x3f) | 0x80);
+	return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($datos), 4));
+}
+
 function enviarConsultaIA(string $url, string $payload, array $headers): ?string
 {
 	$timeout = 60; // Gemini puede tardar (o probar modelos de respaldo); no cortar antes.

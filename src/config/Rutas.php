@@ -102,6 +102,16 @@ class Rutas
             die("Método no encontrado");
         }
 
+        // Solo los métodos públicos del controlador son enrutables; las
+        // funciones auxiliares no deben exponerse por URL.
+        if ($this->controlador === "ControllerValidaciones" && !in_array($metodo, [
+            "cola", "detalle", "propuestas", "tomar", "decidir", "visto",
+            "aprobarPropuesta", "rechazarPropuesta",
+        ], true)) {
+            header("location: /Inicio/inicio");
+            die("Método no permitido");
+        }
+
         if (in_array($this->controlador, ["ControllerIniciarSesion", "ControllerRecuperarContr"])) {
             call_user_func($metodo, $parametro ?? []);
             return;
@@ -196,7 +206,7 @@ class Rutas
             }
 
         }
-        if ($this->controlador == "ControllerInicio" || $this->controlador == "ControllerPerfil" || $this->controlador == "ControllerApi" || $this->controlador == "ControllerBitacora" || $this->controlador == "ControllerChat") {
+        if ($this->controlador == "ControllerInicio" || $this->controlador == "ControllerPerfil" || $this->controlador == "ControllerApi" || $this->controlador == "ControllerBitacora" || $this->controlador == "ControllerChat" || $this->controlador == "ControllerValidaciones") {
             call_user_func($metodo, $parametro ?? []);
             return;
         }
