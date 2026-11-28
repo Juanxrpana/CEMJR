@@ -83,17 +83,44 @@
 /* Evita que la burbuja colapse a una letra por línea dentro del modal:
    se limita el ancho de la columna y la burbuja ocupa hasta el 100% de ella. */
 .chat-modal-mensajes .chat-fila {
+    position: relative;
     width: 100%;
+    padding-inline: 44px;
 }
 
+
 .chat-modal-mensajes .chat-burbuja-columna {
-    max-width: calc(100% - 46px);
+    max-width: 100%;
 }
 
 .chat-modal-mensajes .chat-burbuja {
-    max-width: 100%;
+    max-width: 88%;
     width: fit-content;
 }
+
+
+.chat-modal-mensajes .chat-avatar,
+.chat-modal-mensajes .chat-avatar-icono {
+    position: absolute;
+    top: 0;
+}
+
+.chat-modal-mensajes .chat-fila.asistente .chat-avatar {
+    inset-inline-start: 0;
+}
+
+.chat-modal-mensajes .chat-fila.usuario .chat-avatar-icono {
+    inset-inline-end: 0;
+}
+
+/* En la página la hora va dentro de .chat-acciones (una fila), donde el
+   margin-right: auto de chat.css la separa de los botones. Aquí la hora es
+   hijo directo de la columna, así que ese mismo margen la mandaba al inicio
+   y la hora del usuario quedaba del lado izquierdo de su propia burbuja. */
+.chat-modal-mensajes .chat-hora {
+    margin-right: 0;
+}
+
 
 /* Botón de acción sugerida debajo de la conversación. */
 .chat-modal-accion {
@@ -185,4 +212,73 @@
 .chat-burbuja-emergencia {
     border-color: #dc3545 !important;
     background: rgba(220, 53, 69, 0.08) !important;
+}
+
+ /* RESPONSIVE DEL MODAL */
+
+ @media (max-width: 991.98px) {
+    .chat-modal-contenido {
+        height: 100%;
+    }
+
+    .chat-modal-cuerpo {
+        padding: 0.6rem 0.75rem;
+    }
+
+    .chat-modal-footer {
+        padding: 0.6rem 0.75rem;
+    }
+}
+
+/* ── Celular: texto legible y campo sin zoom automático ────────────────────
+   El breakpoint coincide con el de sistema.css (768px), que es el que
+   rompe el composer con el botón a todo el ancho. */
+@media (max-width: 768px) {
+    /* iOS agranda el viewport cuando un campo de texto baja de 16px.
+       base.css además fija `textarea { min-height: 96px }`, que dentro del
+       composer se come media pantalla: aquí vuelve a una sola línea. */
+    .chat-modal-footer .chat-textarea {
+        font-size: 1rem;
+        min-height: 44px;
+    }
+
+    /* sistema.css estira cualquier .btn-modals a `width: 100% !important`
+       por debajo de 768px. Dentro del composer eso se come todo el ancho y
+       el textarea (flex-shrink: 1, min-width: 0) queda con 0px: en el
+       celular no se ve ni se puede escribir. El botón vuelve a su tamaño
+       de contenido y el campo crece hasta ocupar el resto. */
+    .chat-modal-footer .chat-composer .chat-enviar {
+        display: inline-flex;
+        width: auto !important;
+        max-width: none;
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+    }
+
+    .chat-modal-mensajes .chat-burbuja {
+        font-size: 1rem;
+        line-height: 1.55;
+    }
+
+    .chat-modal-mensajes .chat-hora {
+        font-size: 0.75rem;
+    }
+
+    .chat-modal-cuerpo .chat-escribiendo-texto {
+        font-size: 0.85rem;
+    }
+
+    .chat-modal-mensajes .chat-vacio-texto,
+    .chat-modal-mensajes .chat-reanudar .chat-vacio-texto {
+        font-size: 0.92rem;
+    }
+
+    .chat-modal-mensajes .chat-seccion-titulo,
+    .chat-modal-mensajes .chat-seccion li {
+        font-size: 0.92rem;
+    }
+
+    .chat-modal-mensajes .chat-progreso-texto {
+        font-size: 0.8rem;
+    }
 }
